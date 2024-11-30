@@ -8,7 +8,7 @@ function BigButton() {
   const [chords, setChords] = useState<string[]>([]);
   async function onClick() {
     const response = await generateChords();
-    setChords(response.progression);
+    setChords([]);
   }
 
   return (
