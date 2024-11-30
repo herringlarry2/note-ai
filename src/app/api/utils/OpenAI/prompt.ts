@@ -1,9 +1,10 @@
 import { OPEN_API_KEY } from "../../constants/OpenApiKey";
 import OpenAI from "openai";
-import createMidi from "../Midi/createMidi";
+import createMidi from "../Midi/createMidiTrack";
 import parseResponse from "./parse";
 import fs from "fs";
 import MidiWriter from "midi-writer-js";
+import { uploadS3 } from "../AWS/uploadS3";
 const openai = new OpenAI({apiKey: OPEN_API_KEY});
 
 function getPrompt(key: string, mode: string, startingNote: string, style: string): string {
@@ -34,7 +35,7 @@ const CHORD_EXAMPLE = `
 const SYSTEM_PROMPT = `You are assisting a music producer. Your job is to take the given prompt and generate a response of the format: ${RESPONSE_FORMAT} where each chord is an array of notes lowest to highest: ${CHORD_FORMAT} i.e. ${CHORD_EXAMPLE}. Please do not include any other text in your response.`
 
 
-export default async function prompt(key: string, mode: string, startingNote: string, style: string): Promise<string[][]> {
+export default async function prompt(key: string, mode: string, startingNote: string, style: string): Promise<string | null> {
     const prompt = getPrompt(key, mode, startingNote, style);
     const completion = await openai.chat.completions.create({
         model: MODEL,
@@ -43,14 +44,6 @@ export default async function prompt(key: string, mode: string, startingNote: st
         max_tokens: 100
     });
 
-    const response =  completion.choices[0].message.content ?? "";
-
-    const chords = parseResponse(response);
-
-    // Write midi file to disk
-    const midi = createMidi(chords);
-    const writer = new MidiWriter.Writer(midi);
-    fs.writeFileSync("midi.mid", writer.buildFile());
-
-    // return chords;
+    const response =  completion.choices[0].message.content ?? null;
+    return response;
 }
