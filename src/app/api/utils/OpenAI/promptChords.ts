@@ -1,11 +1,10 @@
-import { OPEN_API_KEY } from "../../constants/OpenApiKey";
-import OpenAI from "openai";
 import createMidi from "../Midi/createMidiTrack";
 import parseResponse from "./parse";
 import fs from "fs";
 import MidiWriter from "midi-writer-js";
 import { uploadS3 } from "../AWS/uploadS3";
-const openai = new OpenAI({apiKey: OPEN_API_KEY});
+import { openai } from "./openAI";
+
 
 function getPrompt(key: string, mode: string, startingNote: string, style: string): string {
     return `Generate a 4-bar chord progression with the following parameters: Key: ${key}, Mode: ${mode}, Starting Note: ${startingNote}, Style: ${style}`;
