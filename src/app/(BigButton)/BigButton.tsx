@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { generateChords, Section } from "../api/chords";
+import { generateBlocks, Section } from "../api/blocks";
 import SectionDisplay from "./SectionDisplay";
 
 function BigButton() {
   const [chords, setChords] = useState<Section | null>(null);
   async function onClick() {
-    const section = await generateChords();
+    const section = await generateBlocks();
     setChords(section);
   }
 

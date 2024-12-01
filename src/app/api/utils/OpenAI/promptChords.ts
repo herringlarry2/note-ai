@@ -35,7 +35,7 @@ const CHORD_EXAMPLE = `
 const SYSTEM_PROMPT = `You are assisting a music producer. Your job is to take the given prompt and generate a response of the format: ${RESPONSE_FORMAT} where each chord is an array of notes lowest to highest: ${CHORD_FORMAT} i.e. ${CHORD_EXAMPLE}. Please do not include any other text in your response.`
 
 
-export default async function prompt(key: string, mode: string, startingNote: string, style: string): Promise<string | null> {
+export default async function promptChords(key: string, mode: string, startingNote: string, style: string): Promise<string | null> {
     const prompt = getPrompt(key, mode, startingNote, style);
     const completion = await openai.chat.completions.create({
         model: MODEL,
