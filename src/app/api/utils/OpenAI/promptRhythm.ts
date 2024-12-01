@@ -5,6 +5,15 @@ import MidiWriter from 'midi-writer-js'
 import { uploadS3 } from '../AWS/uploadS3'
 import { openai } from './openAI'
 
+// Articulation Option
+// 1-127 -> note with corresponding velocity
+// - -> sustain note
+// 0 -> rest
+
+// Note Value (1/16 note, 1/32/ note etc.)
+// genre: rock, pop, hip-hop, etc.
+
+
 function getPrompt(
     key: string,
     mode: string,
@@ -18,24 +27,24 @@ const MODEL = 'gpt-4o-mini'
 
 const RESPONSE_FORMAT = `
     {
-        "chords": [
-            chord1,
-            chord2,
-            chord3,
-            chord4
+        "rhythm": [
+            articulation1,
+            articulation2,
+            articulation3,
+            articulation4
         ]
     }
 `
 
-const CHORD_FORMAT = `
-    ["note1", "note2", "note3", ...]
+const RHYTHM_FORMAT = `
+    [articulation1, articulation2, articulation3, articulation4]
 `
 
-const CHORD_EXAMPLE = `
-    ["C3", "E3", "G3", "B3"]
+const RHYTHM_EXAMPLE = `
+    [127, 93, -, -, 127, 93, -, -]
 `
 
-const SYSTEM_PROMPT = `You are assisting a music producer. Your job is to take the given prompt and generate a response of the format: ${RESPONSE_FORMAT} where each chord is an array of notes lowest to highest: ${CHORD_FORMAT} i.e. ${CHORD_EXAMPLE}. Please do not include any other text in your response.`
+const SYSTEM_PROMPT = `You are assisting a music producer. Your job is to take the given prompt and generate a response of the format: ${RESPONSE_FORMAT} where each chord is an array of notes lowest to highest: ${RHYTHM_EXAMPLE} i.e. ${RHYTHM_EXAMPLE}. Please do not include any other text in your response.`
 
 export default async function promptRhythm(
     key: string,
