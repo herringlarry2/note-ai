@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { type Section } from "../api/chords";
+import { type Section } from "../api/blocks";
 import * as Tone from 'tone';
 import { loadMidi } from "../utils/midi";
 import { playMidi } from "../utils/audio";
@@ -40,9 +40,6 @@ function SectionDisplay({ section }: { section: Section }) {
   return (
     <div className="flex flex-col gap-4">
       <button className="bg-blue-500 text-white p-2 rounded-md" onClick={play}>Play Chords</button>
-      {/* {section.chords.map((chord, idx) => (
-        <div key={`${idx}-${chord}`}>{chord}</div>
-      ))} */}
     </div>
   );
 }
