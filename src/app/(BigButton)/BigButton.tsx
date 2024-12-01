@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Chords from "./Chords";
-import { generateChords } from "../api/chords";
+import { generateChords, Section } from "../api/chords";
+import SectionDisplay from "./SectionDisplay";
 
 function BigButton() {
-  const [chords, setChords] = useState<string[]>([]);
+  const [chords, setChords] = useState<Section | null>(null);
   async function onClick() {
-    const response = await generateChords();
-    setChords([]);
+    const section = await generateChords();
+    setChords(section);
   }
 
   return (
@@ -19,7 +19,7 @@ function BigButton() {
       >
         Click me for song
       </button>
-      {chords.length > 0 && <Chords chords={chords} />}
+      {chords && <SectionDisplay section={chords} />}
     </div>
   );
 }

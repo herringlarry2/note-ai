@@ -13,8 +13,10 @@ export async function signS3(fileName: string) {
     ContentType: "audio/midi", // Adjust the MIME type as needed
   };
 
-  // Generate presigned URL
+  // Generate presigned URL with CORS settings
   const command = new GetObjectCommand(params);
-  const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 }); // 300 seconds = 5 minutes
+  const signedUrl = await getSignedUrl(s3Client, command, { 
+    expiresIn: 300, // 300 seconds = 5 minutes
+  });
   return signedUrl;
 }

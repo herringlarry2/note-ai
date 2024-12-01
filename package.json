@@ -11,6 +11,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.701.0",
     "@aws-sdk/s3-request-presigner": "^3.701.0",
+    "@tonejs/midi": "^2.0.28",
     "i": "^0.3.7",
     "midi-writer-js": "^3.1.1",
     "next": "15.0.3",

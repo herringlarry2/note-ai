@@ -1,4 +1,4 @@
-type SongNote = "i" | "ii" | "iii" | "iv" | "v" | "vi" | "vii";
+export type SongNote = "i" | "ii" | "iii" | "iv" | "v" | "vi" | "vii";
 
 function getWeightedRandomIndex(weights: number[]): number {
     // Generate a random number between 0 and 1

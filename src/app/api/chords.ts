@@ -2,15 +2,24 @@
 
 import MidiWriter from 'midi-writer-js';
 
-import getRandomKey from "./utils/parameters/getRandomKey";
-import getRandomMode from "./utils/parameters/getRandomMode";
-import getRandomStartingNote from "./utils/parameters/getRandomStartingNote";
-import getRandomStyle from "./utils/parameters/getRandomStyle";
+import getRandomKey, { SongKey } from "./utils/parameters/getRandomKey";
+import getRandomMode, { SongMode } from "./utils/parameters/getRandomMode";
+import getRandomStartingNote, { SongNote } from "./utils/parameters/getRandomStartingNote";
+import getRandomStyle, { Style } from "./utils/parameters/getRandomStyle";
 import prompt from "./utils/OpenAI/prompt";
 import { uploadS3 } from "./utils/AWS/uploadS3";
 import createMidiTrack from "./utils/Midi/createMidiTrack";
 import parseResponse from "./utils/OpenAI/parse";
 import { signS3 } from './utils/AWS/signS3';
+
+export type Section = {
+  key: SongKey;
+  mode: SongMode;
+  startingNote: SongNote;
+  style: Style;
+  chords: string[][];
+  signedUrl: string;
+}
 
 async function _generateChords() {
   const key = getRandomKey();
