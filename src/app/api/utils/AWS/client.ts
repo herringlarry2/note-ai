@@ -6,9 +6,9 @@ const accessKeyId = process.env.AWS_ACCESS_KEY_ID; // From .env
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY; // From .env
 // Create S3 client
 export const s3Client = new S3Client({
-  region,
-  credentials: {
-    accessKeyId: accessKeyId ?? '',
-    secretAccessKey: secretAccessKey ?? '',
-  },
+    region,
+    credentials: {
+        accessKeyId: accessKeyId ?? "",
+        secretAccessKey: secretAccessKey ?? "",
+    },
 });

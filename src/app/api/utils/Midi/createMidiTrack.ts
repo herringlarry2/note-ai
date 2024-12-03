@@ -1,23 +1,38 @@
-import MidiWriter from 'midi-writer-js';
-import { Track } from 'midi-writer-js/build/types/chunks/track';
+import MidiWriter from "midi-writer-js";
+import { Track } from "midi-writer-js/build/types/chunks/track";
+import { NoteValue } from "../parameters/getRandomNoteValue";
+import { ChordEvent } from "../OpenAI/promptRhythm";
 
-const DURATION = "1"
 
-function addChord(track: Track, chord: string[], index: number) {
-    const noteEvent = new MidiWriter.NoteEvent({
-        pitch: chord,
-        duration: DURATION
+    
+function writeChordEvents(
+    track: Track,
+    chordEvents: ChordEvent[]
+) {
+    let waitFor: NoteValue[] = [];
 
-    });
-    track.addEvent(noteEvent);
+    console.log("chordEvents", chordEvents);
+
+    chordEvents.forEach((chordEvent) => {
+        if (chordEvent.chord) {
+            track.addEvent(new MidiWriter.NoteEvent({
+                pitch: chordEvent.chord,
+                velocity: chordEvent.velocity,
+                wait: waitFor,
+                duration: chordEvent.duration,
+            }))
+            waitFor = [];
+        } else {
+           waitFor.push(...chordEvent.duration);
+        }
+    })
 }
 
-export default function createMidiTrack(chords: string[][]): Track {
+export default function createMidiTrack(
+    chordEvents: ChordEvent[]
+): Track {
     const track = new MidiWriter.Track();
 
-    chords.forEach((chord, index) => {
-        addChord(track, chord, index);
-    });
-
-    return track; 
+    writeChordEvents(track, chordEvents);
+    return track;
 }
