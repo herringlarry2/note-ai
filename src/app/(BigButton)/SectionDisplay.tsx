@@ -1,35 +1,35 @@
-import { useEffect, useState } from 'react'
-import { type Section } from '../api/blocks'
-import * as Tone from 'tone'
-import { loadMidi } from '../utils/midi'
-import { playMidi } from '../utils/audio'
+import { useEffect, useState } from "react";
+import { type Section } from "../api/blocks";
+import * as Tone from "tone";
+import { loadMidi } from "../utils/midi";
+import { playMidi } from "../utils/audio";
 
 function SectionDisplay({ section }: { section: Section }) {
-    const [fileContent, setFileContent] = useState<string | null>(null)
+    const [fileContent, setFileContent] = useState<string | null>(null);
 
     useEffect(() => {
         const loadFile = async () => {
             try {
-                const response = await fetch(section.signedUrl)
+                const response = await fetch(section.signedUrl);
                 if (!response.ok) {
-                    throw new Error('Network response was not ok')
+                    throw new Error("Network response was not ok");
                 }
-                const data = await response.text() // or response.json() if it's a JSON file
-                setFileContent(data)
+                const data = await response.text(); // or response.json() if it's a JSON file
+                setFileContent(data);
             } catch (error) {
-                console.error('Error fetching the file:', error)
+                console.error("Error fetching the file:", error);
             }
-        }
+        };
 
-        loadFile()
-    }, [section.signedUrl])
+        loadFile();
+    }, [section.signedUrl]);
 
     async function play() {
-        if (!fileContent) return
+        if (!fileContent) return;
 
-        const midi = await loadMidi(section.signedUrl)
+        const midi = await loadMidi(section.signedUrl);
 
-        playMidi(midi)
+        playMidi(midi);
     }
 
     return (
@@ -41,7 +41,7 @@ function SectionDisplay({ section }: { section: Section }) {
                 Play Chords
             </button>
         </div>
-    )
+    );
 }
 
-export default SectionDisplay
+export default SectionDisplay;
