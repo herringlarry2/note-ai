@@ -1,5 +1,5 @@
-import Image from 'next/image'
-import BigButton from './(BigButton)/BigButton'
+import Image from "next/image";
+import BigButton from "./(BigButton)/BigButton";
 export default function Home() {
     return (
         <div className="w-screen h-screen flex justify-center items-center">
@@ -9,5 +9,5 @@ export default function Home() {
                 </div>
             </main>
         </div>
-    )
+    );
 }

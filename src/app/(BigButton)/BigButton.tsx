@@ -1,14 +1,14 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { generateBlocks, Section } from '../api/blocks'
-import SectionDisplay from './SectionDisplay'
+import { useState } from "react";
+import { generateBlocks, Section } from "../api/blocks";
+import SectionDisplay from "./SectionDisplay";
 
 function BigButton() {
-    const [chords, setChords] = useState<Section | null>(null)
+    const [chords, setChords] = useState<Section | null>(null);
     async function onClick() {
-        const section = await generateBlocks()
-        setChords(section)
+        const section = await generateBlocks();
+        setChords(section);
     }
 
     return (
@@ -21,7 +21,7 @@ function BigButton() {
             </button>
             {chords && <SectionDisplay section={chords} />}
         </div>
-    )
+    );
 }
 
-export default BigButton
+export default BigButton;

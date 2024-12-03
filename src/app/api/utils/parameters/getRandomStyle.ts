@@ -1,28 +1,28 @@
 export type Style =
-    | 'blues'
-    | 'rock'
-    | 'jazz'
-    | 'hip-hop'
-    | 'pop'
-    | 'country'
-    | 'electronic'
-    | 'midwest emo'
-    | 'deep house'
-    | 'berlin techno'
+    | "blues"
+    | "rock"
+    | "jazz"
+    | "hip-hop"
+    | "pop"
+    | "country"
+    | "electronic"
+    | "midwest emo"
+    | "deep house"
+    | "berlin techno";
 
 export default function getRandomStyle(): Style {
     const styles: Style[] = [
-        'blues',
-        'rock',
-        'jazz',
-        'hip-hop',
-        'pop',
-        'country',
-        'electronic',
-        'midwest emo',
-        'deep house',
-        'berlin techno',
-    ]
-    return 'deep house'
-    return styles[Math.floor(Math.random() * styles.length)]
+        "blues",
+        "rock",
+        "jazz",
+        "hip-hop",
+        "pop",
+        "country",
+        "electronic",
+        "midwest emo",
+        "deep house",
+        "berlin techno",
+    ];
+    return "deep house";
+    return styles[Math.floor(Math.random() * styles.length)];
 }
