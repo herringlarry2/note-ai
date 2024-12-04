@@ -11,7 +11,6 @@ function writeChordEvents(
 ) {
     let waitFor: NoteValue[] = [];
 
-    console.log("chordEvents", chordEvents);
 
     chordEvents.forEach((chordEvent) => {
         if (chordEvent.chord) {
