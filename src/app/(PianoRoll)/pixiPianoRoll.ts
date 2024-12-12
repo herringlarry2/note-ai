@@ -1,8 +1,8 @@
+"use client"
+
 import musicalScaleColors from 'musical-scale-colors';
 import * as pixi from 'pixi.js';
 import * as teoria from 'teoria';
-
-pixi.utils._saidHello = true;
 
 /**
  * JavaScript 2D WebGL / Canvas animated piano roll
@@ -134,14 +134,16 @@ function pixiPianoRoll(opt) {
         gridlineContainers = {
             main: new pixi.Container()
         },
-        renderer = new pixi[opt.renderer](
-            opt.width,
-            opt.height,
-            {
-                antialias: opt.antialias,
-                autoResize: true
-            }
-        );
+    
+    renderer = new pixi.Application();
+    renderer.init({
+        width: opt.width,
+        height: opt.height,
+        antialias: opt.antialias,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true,
+        backgroundColor: opt.blackGridBgColor,
+    });
 
     function getTeoriaNote(note) {
         let noteObj = teoria.note['from' + opt.noteFormat](note);
@@ -388,7 +390,9 @@ function pixiPianoRoll(opt) {
         moveVerticalGridLines(horizontalMovement);
         activateKeys();
         lastTime = frameTime;
-        renderer.render(stage);
+        renderer.stage.addChild(stage);
+        console.log("rendering1")
+        renderer.render()
         playing ? requestAnimationFrame(animate) : lastTime = null;
     }
 
@@ -414,7 +418,9 @@ function pixiPianoRoll(opt) {
         drawNotes();
         drawPianoKeys();
         renderer.backgroundColor = opt.blackGridBgColor;
-        renderer.render(stage);
+        console.log("rendering2", renderer)
+        renderer.stage.addChild(stage);
+        renderer.render()
     })();
 
     /**
@@ -467,7 +473,8 @@ function pixiPianoRoll(opt) {
                 noteContainer.x = transportTimeToX(time);
                 drawGridlines('vertical');
                 rollContainer.addChild(rollContainer.removeChild(noteContainer));
-                renderer.render(stage);
+                renderer.stage.addChild(stage);
+                renderer.render()
             }
         },
         /**
@@ -489,7 +496,8 @@ function pixiPianoRoll(opt) {
             calculate();
             drawGridlines();
             drawNotes();
-            renderer.render(stage);
+            renderer.stage.addChild(stage);
+            renderer.render()
         },
         /**
          * Change the resolution by changing this property
@@ -501,7 +509,8 @@ function pixiPianoRoll(opt) {
             calculate();
             drawGridlines('vertical');
             rollContainer.addChild(rollContainer.removeChild(noteContainer));
-            renderer.render(stage);
+            renderer.stage.addChild(stage);
+            renderer.render()
         },
         /**
          * Change the note data by changing this property
@@ -514,7 +523,8 @@ function pixiPianoRoll(opt) {
             drawGridlines('horizontal');
             drawNotes();
             drawPianoKeys();
-            renderer.render(stage);
+            renderer.stage.addChild(stage);
+            renderer.render()
         },
         /**
          * Whether or not playback is ongoing
