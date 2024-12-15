@@ -5,19 +5,19 @@ function createNoteClient() {
             const response = await fetch(`${urlPrefix}${endpoint}`);
             return response.json();
         },
-        
+
         async post<T>(endpoint: string, data?: unknown): Promise<T> {
             const response = await fetch(`${urlPrefix}${endpoint}`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
-                body: data ? JSON.stringify(data) : undefined
+                body: data ? JSON.stringify(data) : undefined,
             });
             return response.json();
-        }
+        },
     };
-    
+
     return client;
 }
 
