@@ -1,5 +1,6 @@
 import Image from "next/image";
 import BigButton from "./(BigButton)/BigButton";
+import { PianoRoll } from "./(PianoRoll)/PianoRoll";
 export default function Home() {
     return (
         <div className="w-screen h-screen flex justify-center items-center">
