@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { CompactNoteJSON, NoteJSON } from "../types/Midi";
 
 interface PianoRollProps {
@@ -36,6 +36,21 @@ const isBlackKey = (noteName: string) => {
     return noteName.includes("#");
 };
 
+function useScrollNewNotesIntoView(notes: NoteJSON[]) {
+    useEffect(() => {
+        const mostRecentNote = document.getElementById(
+            `note-${notes.length - 1}`
+        );
+
+        if (mostRecentNote) {
+            mostRecentNote.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+            });
+        }
+    }, [notes]);
+}
+
 export const PianoRoll: React.FC<PianoRollProps> = ({
     notes,
     setNotes,
@@ -56,6 +71,8 @@ export const PianoRoll: React.FC<PianoRollProps> = ({
     const totalColumns = minimumColumns;
 
     const totalWidth = Math.max(width, totalColumns * cellWidth + 48);
+
+    useScrollNewNotesIntoView(notes);
 
     const handleCellClick = (noteName: string, columnIndex: number) => {
         const newNote: NoteJSON = {
@@ -130,6 +147,7 @@ export const PianoRoll: React.FC<PianoRollProps> = ({
 
                 return (
                     <div
+                        id={`note-${index}`}
                         key={index}
                         className={`absolute rounded-sm shadow-md cursor-pointer
                             ${
