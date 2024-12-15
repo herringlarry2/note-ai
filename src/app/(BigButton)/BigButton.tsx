@@ -7,7 +7,20 @@ import { loadMidi } from "../utils/midi";
 import { type NoteJSON } from "../types/Midi";
 import { useAudio } from "../utils/audio";
 import ContinuedSequence from "./ContinuedSequence";
+import { PianoRoll } from "../(PianoRoll)/PianoRoll";
 
+
+function useMidiNotes(currentIdea: NoteJSON[] | null, originalMidiNotes: NoteJSON[] | null) {
+    const [midiNotes, setMidiNotes] = useState<NoteJSON[]>([]);
+
+    useEffect(() => {
+        if (currentIdea || originalMidiNotes) {
+            setMidiNotes([...(currentIdea ?? []), ...(originalMidiNotes ?? [])]);
+        }
+    }, [currentIdea, originalMidiNotes]);
+
+    return {midiNotes, setMidiNotes};
+}
 
 function useFetchTracks() {
     const [tracks, setTracks] = useState<TrackJSON[]>([]);
@@ -36,15 +49,26 @@ function BigButton() {
 
     const [currentIdea, setCurrentIdea] = useState<NoteJSON[] | null>(null);
 
+    const {midiNotes, setMidiNotes} = useMidiNotes(currentIdea, tracks?.[0]?.notes);
+
+    function onClear() {
+        setMidiNotes([]);
+    }
+
+    console.log(midiNotes);
+
     async function onClickGenerate() {
         const ideas = await noteClient.post<NoteJSON[][]>("/api/continue_track");
         setIdeas(ideas);
     }
 
+
     async function onClickPlay() {
-        const appendNotes = currentIdea ? currentIdea : [];
-        const currNotes = tracks?.[0].notes;
-        playNotes([...currNotes, ...appendNotes]);
+        playNotes(midiNotes);
+    }
+
+    async function onClickSave() {
+        await noteClient.post("/api/save_track", {notes: midiNotes});
     }
 
 
@@ -62,7 +86,20 @@ function BigButton() {
             >
                 Play current idea
             </button>
+            <button
+                className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
+                onClick={onClickSave}
+            >
+                Save
+            </button>
+            <button
+                className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
+                onClick={onClear}
+            >
+                Clear
+            </button>
             <ContinuedSequence ideas={ideas} setCurrentIdea={setCurrentIdea} />
+            <PianoRoll width={1250} height={500} notes={midiNotes} setNotes={setMidiNotes} />
         </div>
     );
 }
