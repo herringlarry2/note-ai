@@ -16,8 +16,8 @@ async function playNotes(notes: NoteJSON[], synth: PolySynth) {
 
 
     notes.forEach((note, idx) => {
-        const durationSeconds = convertTicksToSeconds(note.durationTicks) / 4;
-        const startTimeSeconds = convertTicksToSeconds(note.ticks) / 8;
+        const durationSeconds = convertTicksToSeconds(note.durationTicks) / 2;
+        const startTimeSeconds = convertTicksToSeconds(note.ticks) / 4;
         getTransport().scheduleOnce((time) => {
             synth.triggerAttackRelease(
                 note.name,
@@ -39,7 +39,7 @@ export function useAudio() {
     const synth = useRef<PolySynth>();
 
     useEffect(() => {
-        const localSynth = new PolySynth().toDestination();
+        const localSynth = new PolySynth({maxPolyphony: 100}).toDestination();
         synth.current = localSynth;
     }, [])
 
