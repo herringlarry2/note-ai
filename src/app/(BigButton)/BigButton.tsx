@@ -27,6 +27,12 @@ function useMidiNotes(
     return { midiNotes, setMidiNotes };
 }
 
+function Spinner() {
+    return (
+        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+    );
+}
+
 function useFetchTracks() {
     const [tracks, setTracks] = useState<TrackJSON[]>([]);
 
@@ -46,6 +52,8 @@ function useFetchTracks() {
 }
 
 function BigButton() {
+    const [selectedIdx, setSelectedIdx] = useState(0);
+    const [isGenerating, setIsGenerating] = useState(false);
     // I think that ultimately we just just use the tonejs midi format but for now
     // I just want to see that it works so we'll massage temp into that format
     const [ideas, setIdeas] = useState<NoteJSON[][]>([]);
@@ -65,12 +73,14 @@ function BigButton() {
     }
 
     async function onClickGenerate() {
+        setIsGenerating(true);
         // Save the midi first until we have a better way to do this
         await noteClient.post("/api/save_track", { notes: midiNotes });
         const ideas = await noteClient.post<NoteJSON[][]>(
             "/api/continue_track"
         );
         setIdeas(ideas);
+        setIsGenerating(false);
     }
 
     async function onClickPlay() {
@@ -85,12 +95,15 @@ function BigButton() {
         <div className="flex flex-col gap-4 items-center">
             <ContinuedSequence
                 ideas={ideas}
-                setCurrentIdea={setCurrentIdea}
-                currentIdea={currentIdea}
+                onSelect={(idx) => {
+                    setCurrentIdea(ideas[idx]);
+                    setSelectedIdx(idx);
+                }}
+                selectedIdx={selectedIdx}
             />
             <PianoRoll
-                width={1250}
-                height={500}
+                width={1450}
+                height={700}
                 notes={midiNotes}
                 setNotes={setMidiNotes}
             />
@@ -99,7 +112,7 @@ function BigButton() {
                     className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
                     onClick={onClickGenerate}
                 >
-                    Generate
+                    {isGenerating ? <Spinner /> : "Generate"}
                 </button>
                 <button
                     className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
