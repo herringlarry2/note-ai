@@ -36,21 +36,6 @@ const isBlackKey = (noteName: string) => {
     return noteName.includes("#");
 };
 
-function useScrollNewNotesIntoView(notes: NoteJSON[]) {
-    useEffect(() => {
-        const mostRecentNote = document.getElementById(
-            `note-${notes.length - 1}`
-        );
-
-        if (mostRecentNote) {
-            mostRecentNote.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-            });
-        }
-    }, [notes]);
-}
-
 export const PianoRoll: React.FC<PianoRollProps> = ({
     notes,
     setNotes,
@@ -71,8 +56,6 @@ export const PianoRoll: React.FC<PianoRollProps> = ({
     const totalColumns = minimumColumns;
 
     const totalWidth = Math.max(width, totalColumns * cellWidth + 48);
-
-    useScrollNewNotesIntoView(notes);
 
     const handleCellClick = (noteName: string, columnIndex: number) => {
         const newNote: NoteJSON = {
@@ -107,7 +90,10 @@ export const PianoRoll: React.FC<PianoRollProps> = ({
                         style={{ height: cellHeight }}
                     >
                         {/* Note Label */}
-                        <div className="absolute left-0 top-0 w-12 h-full flex items-center justify-center text-xs text-zinc-400 border-r border-zinc-700 bg-zinc-900">
+                        <div
+                            className="absolute left-0 top-0 w-12 h-full flex items-center justify-center text-xs text-zinc-sta400 border-r border-zinc-700 bg-zinc-900"
+                            style={{ position: "sticky", left: 0, zIndex: 1 }}
+                        >
                             {noteName}
                         </div>
                         {/* Grid Cells */}
