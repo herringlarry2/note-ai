@@ -1,47 +1,23 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { CompactNoteJSON, NoteJSON } from "../types/Midi";
+import React from "react";
+import { NoteJSON } from "../types/Midi";
+import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
+import Note from "./Note";
+import NoteCell from "./NoteCell";
+import NoteLabel from "./NoteLabel";
 
-interface PianoRollProps {
-    notes: NoteJSON[];
-    setNotes: React.Dispatch<React.SetStateAction<NoteJSON[]>>;
-    width: number;
-    height: number;
-}
-
-const TICKS_PER_16TH = 60;
-const NOTE_NAMES = [
-    "C",
-    "C#",
-    "D",
-    "D#",
-    "E",
-    "F",
-    "F#",
-    "G",
-    "G#",
-    "A",
-    "A#",
-    "B",
-];
-const OCTAVES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-const ALL_NOTES = OCTAVES.map((octave) =>
-    NOTE_NAMES.map((note) => `${note}${octave}`)
-)
-    .flat()
-    .reverse();
-
-const isBlackKey = (noteName: string) => {
-    return noteName.includes("#");
-};
-
-export const PianoRoll: React.FC<PianoRollProps> = ({
+export function PianoRoll({
     notes,
     setNotes,
     width,
     height,
-}) => {
+}: {
+    notes: NoteJSON[];
+    setNotes: React.Dispatch<React.SetStateAction<NoteJSON[]>>;
+    width: number;
+    height: number;
+}) {
     const cellHeight = Math.max(height / ALL_NOTES.length, 20);
     const cellWidth = TICKS_PER_16TH;
     const maxTicks =
@@ -58,7 +34,7 @@ export const PianoRoll: React.FC<PianoRollProps> = ({
     const totalWidth = Math.max(width, totalColumns * cellWidth + 48);
 
     const handleCellClick = (noteName: string, columnIndex: number) => {
-        const newNote: CompactNoteJSON = {
+        const newNote: NoteJSON = {
             name: noteName,
             velocity: 1,
             ticks: columnIndex * TICKS_PER_16TH,
@@ -90,31 +66,16 @@ export const PianoRoll: React.FC<PianoRollProps> = ({
                         style={{ height: cellHeight }}
                     >
                         {/* Note Label */}
-                        <div
-                            className="absolute left-0 top-0 w-12 h-full flex items-center justify-center text-xs text-zinc-sta400 border-r border-zinc-700 bg-zinc-900"
-                            style={{ position: "sticky", left: 0, zIndex: 1 }}
-                        >
-                            {noteName}
-                        </div>
+                        <NoteLabel noteName={noteName} />
                         {/* Grid Cells */}
                         {Array.from({ length: totalColumns }).map(
                             (_, colIndex) => (
-                                <div
-                                    key={colIndex}
-                                    className={`absolute border-r border-b border-zinc-700/50
-                                    ${
-                                        !isBlackKey(noteName)
-                                            ? "bg-zinc-900 hover:bg-zinc-800"
-                                            : "bg-zinc-950 hover:bg-zinc-900"
-                                    }
-                                    transition-colors cursor-pointer
-                                `}
-                                    style={{
-                                        top: 0,
-                                        left: colIndex * cellWidth + 48, // Add 48px for labels
-                                        width: cellWidth,
-                                        height: cellHeight,
-                                    }}
+                                <NoteCell
+                                    key={`note-cell-${noteName}-${colIndex}`}
+                                    noteName={noteName}
+                                    colIndex={colIndex}
+                                    cellWidth={cellWidth}
+                                    cellHeight={cellHeight}
                                     onClick={() =>
                                         handleCellClick(noteName, colIndex)
                                     }
@@ -127,32 +88,17 @@ export const PianoRoll: React.FC<PianoRollProps> = ({
 
             {/* Notes */}
             {notes.map((note, index) => {
-                const rowIndex = ALL_NOTES.indexOf(note.name);
-                const left = (note.ticks / TICKS_PER_16TH) * cellWidth + 48; // Add 48px for labels
-                const width = (note.durationTicks / TICKS_PER_16TH) * cellWidth;
-
                 return (
-                    <div
-                        id={`note-${index}`}
-                        key={index}
-                        className={`absolute rounded-sm shadow-md cursor-pointer
-                            ${
-                                !isBlackKey(note.name)
-                                    ? "bg-emerald-500 hover:bg-emerald-400"
-                                    : "bg-emerald-400 hover:bg-emerald-300"
-                            }
-                            transition-colors
-                        `}
-                        style={{
-                            top: rowIndex * cellHeight + 1,
-                            left,
-                            width,
-                            height: cellHeight - 2,
-                        }}
+                    <Note
+                        key={`note-${index}-${note.name}`}
+                        note={note}
+                        cellWidth={cellWidth}
+                        cellHeight={cellHeight}
+                        index={index}
                         onClick={(e) => handleNoteClick(index, e)}
                     />
                 );
             })}
         </div>
     );
-};
+}
