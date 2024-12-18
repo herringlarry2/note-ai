@@ -58,7 +58,7 @@ export const PianoRoll: React.FC<PianoRollProps> = ({
     const totalWidth = Math.max(width, totalColumns * cellWidth + 48);
 
     const handleCellClick = (noteName: string, columnIndex: number) => {
-        const newNote: NoteJSON = {
+        const newNote: CompactNoteJSON = {
             name: noteName,
             velocity: 1,
             ticks: columnIndex * TICKS_PER_16TH,
