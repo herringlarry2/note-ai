@@ -71,6 +71,7 @@ export function PianoRoll({
                         {Array.from({ length: totalColumns }).map(
                             (_, colIndex) => (
                                 <NoteCell
+                                    key={`note-cell-${noteName}-${colIndex}`}
                                     noteName={noteName}
                                     colIndex={colIndex}
                                     cellWidth={cellWidth}
@@ -89,6 +90,7 @@ export function PianoRoll({
             {notes.map((note, index) => {
                 return (
                     <Note
+                        key={`note-${index}-${note.name}`}
                         note={note}
                         cellWidth={cellWidth}
                         cellHeight={cellHeight}
