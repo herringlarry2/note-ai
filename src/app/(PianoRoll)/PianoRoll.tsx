@@ -17,18 +17,20 @@ import NoteLabel from "./NoteLabel";
 // 3. Users can commit these suggestions or cycle through them
 
 export function PianoRoll({
-    notes,
+    incumbentNotes,
     candidateNotes,
     setNotes,
     width,
     height,
 }: {
-    notes: NoteJSON[];
+    incumbentNotes: NoteJSON[];
     candidateNotes: NoteJSON[];
     setNotes: React.Dispatch<React.SetStateAction<NoteJSON[]>>;
     width: number;
     height: number;
 }) {
+    const notes = [...incumbentNotes, ...candidateNotes];
+
     const cellHeight = Math.max(height / ALL_NOTES.length, 20);
     const cellWidth = TICKS_PER_16TH;
     const maxTicks =
@@ -98,7 +100,7 @@ export function PianoRoll({
             </div>
 
             {/* Notes */}
-            {notes.map((note, index) => {
+            {incumbentNotes.map((note, index) => {
                 return (
                     <Note
                         key={`note-${index}-${note.name}`}
@@ -107,6 +109,7 @@ export function PianoRoll({
                         cellHeight={cellHeight}
                         index={index}
                         onClick={(e) => handleNoteClick(index, e)}
+                        color="emerald"
                     />
                 );
             })}
@@ -119,6 +122,7 @@ export function PianoRoll({
                         cellHeight={cellHeight}
                         index={index}
                         onClick={(e) => handleNoteClick(index, e)}
+                        color="orange"
                     />
                 );
             })}
