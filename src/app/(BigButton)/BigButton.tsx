@@ -33,12 +33,11 @@ function Spinner() {
     );
 }
 
-function useFetchTracks() {
+function useCurrentTrack() {
     const [tracks, setTracks] = useState<TrackJSON[]>([]);
 
     useEffect(() => {
         async function fetchTrack() {
-            console.log("Fetching track");
             const { signedUrl } = await noteClient.get<{ signedUrl: string }>(
                 "/api/sign_s3"
             );
@@ -105,6 +104,7 @@ function BigButton() {
                 width={1450}
                 height={700}
                 notes={midiNotes}
+                candidateNotes={currentIdea ?? []}
                 setNotes={setMidiNotes}
             />
             <div className="flex flex-row gap-2">
