@@ -7,17 +7,30 @@ import Note from "./Note";
 import NoteCell from "./NoteCell";
 import NoteLabel from "./NoteLabel";
 
+// Current Notes
+
+// Prospective candidates
+
+// Requirements
+// 1. If there are suggestions, then we should display them
+// 2. The suggestions should be displayed as a different color
+// 3. Users can commit these suggestions or cycle through them
+
 export function PianoRoll({
-    notes,
+    incumbentNotes,
+    candidateNotes,
     setNotes,
     width,
     height,
 }: {
-    notes: NoteJSON[];
+    incumbentNotes: NoteJSON[];
+    candidateNotes: NoteJSON[];
     setNotes: React.Dispatch<React.SetStateAction<NoteJSON[]>>;
     width: number;
     height: number;
 }) {
+    const notes = [...incumbentNotes, ...candidateNotes];
+
     const cellHeight = Math.max(height / ALL_NOTES.length, 20);
     const cellWidth = TICKS_PER_16TH;
     const maxTicks =
@@ -87,7 +100,7 @@ export function PianoRoll({
             </div>
 
             {/* Notes */}
-            {notes.map((note, index) => {
+            {incumbentNotes.map((note, index) => {
                 return (
                     <Note
                         key={`note-${index}-${note.name}`}
@@ -96,6 +109,20 @@ export function PianoRoll({
                         cellHeight={cellHeight}
                         index={index}
                         onClick={(e) => handleNoteClick(index, e)}
+                        color="emerald"
+                    />
+                );
+            })}
+            {candidateNotes.map((note, index) => {
+                return (
+                    <Note
+                        key={`candidate-note-${index}-${note.name}`}
+                        note={note}
+                        cellWidth={cellWidth}
+                        cellHeight={cellHeight}
+                        index={index}
+                        onClick={(e) => handleNoteClick(index, e)}
+                        color="orange"
                     />
                 );
             })}
