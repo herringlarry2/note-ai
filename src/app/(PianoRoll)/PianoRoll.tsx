@@ -6,6 +6,7 @@ import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import Note from "./Note";
 import NoteCell from "./NoteCell";
 import NoteLabel from "./NoteLabel";
+import { EditMode } from "../(BigButton)/useEditMode";
 
 // Current Notes
 
@@ -22,12 +23,14 @@ export function PianoRoll({
     setNotes,
     width,
     height,
+    mode,
 }: {
     incumbentNotes: NoteJSON[];
     candidateNotes: NoteJSON[];
     setNotes: React.Dispatch<React.SetStateAction<NoteJSON[]>>;
     width: number;
     height: number;
+    mode: EditMode;
 }) {
     const notes = [...incumbentNotes, ...candidateNotes];
 
@@ -47,21 +50,26 @@ export function PianoRoll({
     const totalWidth = Math.max(width, totalColumns * cellWidth + 48);
 
     const handleCellClick = (noteName: string, columnIndex: number) => {
-        const newNote: NoteJSON = {
-            name: noteName,
-            velocity: 1,
-            ticks: columnIndex * TICKS_PER_16TH,
-            durationTicks: TICKS_PER_16TH,
-            time: 0,
-            midi: 0,
-            duration: 0,
-        };
-        setNotes((prev) => [...prev, newNote]);
+        if (mode === "write") {
+            const newNote: NoteJSON = {
+                name: noteName,
+                velocity: 1,
+                ticks: columnIndex * TICKS_PER_16TH,
+                durationTicks: TICKS_PER_16TH,
+                time: 0,
+                midi: 0,
+                duration: 0,
+            };
+            setNotes((prev) => [...prev, newNote]);
+        }
     };
 
     const handleNoteClick = (index: number, e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent triggering handleCellClick
-        setNotes((prev) => prev.filter((_, i) => i !== index));
+        // If we are in write mode, then we should delete the note
+        if (mode === "write") {
+            setNotes((prev) => prev.filter((_, i) => i !== index));
+        }
     };
 
     return (
