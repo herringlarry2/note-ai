@@ -21,6 +21,7 @@ export function PianoRollCanvas({
     mode: EditMode;
 }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const labelsRef = useRef<HTMLCanvasElement>(null);
     const notes = [...incumbentNotes, ...candidateNotes];
 
     const cellHeight = Math.max(height / ALL_NOTES.length, 20);
@@ -35,6 +36,31 @@ export function PianoRollCanvas({
         Math.floor(width / cellWidth)
     );
     const totalWidth = Math.max(width, minimumColumns * cellWidth + 48);
+
+    // Add new useEffect for labels canvas
+    useEffect(() => {
+        const canvas = labelsRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = 48 * dpr;
+        canvas.height = totalHeight * dpr;
+        ctx.scale(dpr, dpr);
+
+        // Clear canvas
+        ctx.clearRect(0, 0, 48, totalHeight);
+
+        // Draw note labels
+        ctx.fillStyle = "#e4e4e7"; // zinc-200
+        ctx.font = "12px sans-serif";
+        ALL_NOTES.forEach((noteName, index) => {
+            const y = index * cellHeight + cellHeight / 2 + 4;
+            ctx.fillText(noteName, 4, y);
+        });
+    }, [cellHeight, totalHeight]);
 
     // Handle canvas drawing
     useEffect(() => {
@@ -82,14 +108,6 @@ export function PianoRollCanvas({
             ctx.lineTo(x, totalHeight);
             ctx.stroke();
         }
-
-        // Draw note labels
-        ctx.fillStyle = "#e4e4e7"; // zinc-200
-        ctx.font = "12px sans-serif";
-        ALL_NOTES.forEach((noteName, index) => {
-            const y = index * cellHeight + cellHeight / 2 + 4;
-            ctx.fillText(noteName, 4, y);
-        });
 
         // Draw incumbent notes
         incumbentNotes.forEach((note) => {
@@ -165,9 +183,14 @@ export function PianoRollCanvas({
             style={{ width, height }}
         >
             <canvas
+                ref={labelsRef}
+                className="absolute left-0 top-0 z-10 bg-zinc-900"
+                style={{ width: 48, height: totalHeight }}
+            />
+            <canvas
                 ref={canvasRef}
                 onClick={handleCanvasClick}
-                style={{ width: totalWidth }}
+                style={{ width: totalWidth, marginLeft: 48 }}
             />
         </div>
     );
