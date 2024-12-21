@@ -14,6 +14,7 @@ import {
     PencilIcon,
     TrashIcon,
 } from "@heroicons/react/24/outline";
+import { PianoRollCanvas } from "../(PianoRoll)/PianoRollCanvas";
 
 function useMidiNotes(
     currentIdea: NoteJSON[] | null,
@@ -141,7 +142,7 @@ function BigButton() {
                 }}
                 selectedIdx={selectedIdx}
             />
-            <PianoRoll
+            <PianoRollCanvas
                 width={1450}
                 height={700}
                 incumbentNotes={notes}
