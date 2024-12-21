@@ -8,6 +8,12 @@ import { type NoteJSON } from "../types/Midi";
 import { useAudio } from "../utils/audio";
 import ContinuedSequence from "./ContinuedSequence";
 import { PianoRoll } from "../(PianoRoll)/PianoRoll";
+import { EditMode, useEditMode } from "./useEditMode";
+import {
+    CursorArrowRaysIcon,
+    PencilIcon,
+    TrashIcon,
+} from "@heroicons/react/24/outline";
 
 function useMidiNotes(
     currentIdea: NoteJSON[] | null,
@@ -52,6 +58,31 @@ function useCurrentTrack() {
     return { notes, setNotes };
 }
 
+function EditModeButtons({
+    mode,
+    setMode,
+}: {
+    mode: EditMode;
+    setMode: React.Dispatch<React.SetStateAction<EditMode>>;
+}) {
+    return (
+        <div className="flex flex-row gap-2">
+            <button
+                className={`px-4 py-2 bg-black text-white rounded-full border border-white ${mode === "point" ? "opacity-100" : "opacity-50"}`}
+                onClick={() => setMode("point")}
+            >
+                <CursorArrowRaysIcon className="h-6 w-6" />
+            </button>
+            <button
+                className={`px-4 py-2 bg-black text-white rounded-full border border-white ${mode === "write" ? "opacity-100" : "opacity-50"}`}
+                onClick={() => setMode("write")}
+            >
+                <PencilIcon className="h-6 w-6" />
+            </button>
+        </div>
+    );
+}
+
 function BigButton() {
     const [selectedIdx, setSelectedIdx] = useState(-1);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -59,7 +90,7 @@ function BigButton() {
     // I just want to see that it works so we'll massage temp into that format
     const [ideas, setIdeas] = useState<NoteJSON[][]>([]);
     const { playNotes } = useAudio();
-
+    const { mode, setMode } = useEditMode();
     const { notes, setNotes } = useCurrentTrack();
     const [currentIdea, setCurrentIdea] = useState<NoteJSON[] | null>(null);
 
@@ -116,38 +147,43 @@ function BigButton() {
                 incumbentNotes={notes}
                 candidateNotes={currentIdea ?? []}
                 setNotes={setNotes}
+                mode={mode}
             />
-            <div className="flex flex-row gap-2">
-                <button
-                    className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
-                    onClick={onClickGenerate}
-                >
-                    {isGenerating ? <Spinner /> : "Generate"}
-                </button>
-                <button
-                    className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
-                    onClick={onClickPlay}
-                >
-                    Play
-                </button>
-                <button
-                    className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
-                    onClick={onClickSave}
-                >
-                    Save
-                </button>
-                <button
-                    className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
-                    onClick={onClear}
-                >
-                    Clear
-                </button>
-                <button
-                    className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
-                    onClick={onCommitIdea}
-                >
-                    Commit
-                </button>
+
+            <div className="flex flex-row gap-2 w-full justify-around">
+                <EditModeButtons mode={mode} setMode={setMode} />
+                <div className="flex flex-row gap-2">
+                    <button
+                        className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
+                        onClick={onClickGenerate}
+                    >
+                        {isGenerating ? <Spinner /> : "Generate"}
+                    </button>
+                    <button
+                        className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
+                        onClick={onClickPlay}
+                    >
+                        Play
+                    </button>
+                    <button
+                        className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
+                        onClick={onClickSave}
+                    >
+                        Save
+                    </button>
+                    <button
+                        className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
+                        onClick={onClear}
+                    >
+                        Clear
+                    </button>
+                    <button
+                        className="px-6 py-3 bg-black text-white font-semibold rounded-full border border-white"
+                        onClick={onCommitIdea}
+                    >
+                        Commit
+                    </button>
+                </div>
             </div>
         </div>
     );
