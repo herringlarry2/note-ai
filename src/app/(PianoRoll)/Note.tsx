@@ -22,7 +22,6 @@ export default function Note({
     draggable: boolean;
 }) {
 
-    const disabled = !draggable;
     const noteId = `note-${index}-${note.name}`;
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
         id: noteId,
