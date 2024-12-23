@@ -49,8 +49,6 @@ export function deriveNewNote(
     const newNoteName = ALL_NOTES[newNoteIndex];
 
     const xPosition = oldNote.ticks + transformX
-    // similarly, offset the x-position to get the middle of the note so that which note is to the right of the note you are dropping is determined by the middle of the note
-    const offsetX = xPosition - TICKS_PER_16TH / 2;
     const newStartTicks = quantized ? calculateQuantizedTicks(xPosition) : xPosition;
     return {...oldNote, name: newNoteName, ticks: newStartTicks}
 }

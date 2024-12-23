@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { NoteJSON } from "../types/Midi";
+import { AnnotatedNoteJSON, NoteJSON, NoteStatus } from "../types/Midi";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import Note from "./Note";
 import NoteCell from "./NoteCell";
@@ -27,21 +27,19 @@ function isSameNote(a: NoteJSON, b: NoteJSON) {
 const QUANTIZED = true;
 
 export function PianoRoll({
-    incumbentNotes,
-    candidateNotes,
-    setNotes,
+    notes,
+    addNotes,
     width,
     height,
     mode,
 }: {
-    incumbentNotes: NoteJSON[];
-    candidateNotes: NoteJSON[];
-    setNotes: React.Dispatch<React.SetStateAction<NoteJSON[]>>;
+    notes: AnnotatedNoteJSON[];
+    addNotes: (newNotes: AnnotatedNoteJSON[], status: NoteStatus) => void;
+    removeNotes: (indices: number[]) => void;
     width: number;
     height: number;
     mode: EditMode;
 }) {
-    const notes = [...incumbentNotes, ...candidateNotes];
 
     const cellHeight = Math.max(height / ALL_NOTES.length, 20);
     const cellWidth = TICKS_PER_16TH;
@@ -69,7 +67,7 @@ export function PianoRoll({
                 midi: 0,
                 duration: 0,
             };
-            setNotes((prev) => [...prev, newNote]);
+            addNotes([newNote], "committed");
         }
     };
 
@@ -77,7 +75,7 @@ export function PianoRoll({
         e.stopPropagation(); // Prevent triggering handleCellClick
         // If we are in write mode, then we should delete the note
         if (mode === "write") {
-            setNotes((prev) => prev.filter((_, i) => i !== index));
+            removeNotes([index])
         }
     };
 
@@ -91,7 +89,8 @@ export function PianoRoll({
             return;
         }
         // remove old note + add new note
-        setNotes((prev) => [...prev.filter((n) => !isSameNote(n, oldNote)), newNote]);
+        removeNotes([oldNote]);
+        addNotes([newNote], "candidate");
     };  
 
     const isDraggable = mode === "point";
@@ -133,7 +132,7 @@ export function PianoRoll({
             </div>
 
             {/* Notes */}
-            {incumbentNotes.map((note, index) => {
+            {notes.map((note, index) => {
                 return (
                     <Note
                         key={`note-${index}-${note.name}`}
@@ -142,21 +141,7 @@ export function PianoRoll({
                         cellHeight={cellHeight}
                         index={index}
                         onClick={(e) => handleNoteClick(index, e)}
-                        color="emerald"
-                        draggable={isDraggable}
-                    />
-                );
-            })}
-            {candidateNotes.map((note, index) => {
-                return (
-                    <Note
-                        key={`candidate-note-${index}-${note.name}`}
-                        note={note}
-                        cellWidth={cellWidth}
-                        cellHeight={cellHeight}
-                        index={index}
-                        onClick={(e) => handleNoteClick(index, e)}
-                        color="orange"
+                        color={note.status === "candidate" ? "orange" : "emerald"}
                         draggable={isDraggable}
                     />
                 );

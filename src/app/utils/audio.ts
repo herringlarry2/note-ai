@@ -1,14 +1,14 @@
 "use client";
 
 import { getTransport, PolySynth, Context, Ticks } from "tone";
-import { NoteJSON } from "../types/Midi";
+import { AnnotatedNoteJSON, NoteJSON } from "../types/Midi";
 import { useEffect, useRef } from "react";
 
 function convertTicksToSeconds(ticks: number) {
     return Ticks(ticks).toSeconds();
 }
 
-async function playNotes(notes: NoteJSON[], synth: PolySynth) {
+async function playNotes(notes: AnnotatedNoteJSON[], synth: PolySynth) {
     synth.releaseAll();
     getTransport().stop();
     getTransport().cancel(0);

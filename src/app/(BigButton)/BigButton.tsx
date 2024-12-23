@@ -14,6 +14,7 @@ import {
     PencilIcon,
     TrashIcon,
 } from "@heroicons/react/24/outline";
+import saveTrack from "../api/saveTrack";
 
 function useMidiNotes(
     currentIdea: NoteJSON[] | null,
@@ -39,8 +40,26 @@ function Spinner() {
     );
 }
 
-function useCurrentTrack() {
-    const [notes, setNotes] = useState<NoteJSON[]>([]);
+function useCurrentNotes() {
+    const [notes, setNotes] = useState<AnnotatedNoteJSON[]>([]);
+
+    function _setNotes(newNotes: AnnotatedNoteJSON[] | NoteJSON[], status: NoteStatus) {
+        setNotes(newNotes.map(note => ({
+            ...note,
+            status,
+        })));
+    }
+
+    function addNotes(newNotes: AnnotatedNoteJSON[] | NoteJSON[], status: NoteStatus) {
+        setNotes(prev => [...prev, ...newNotes.map(note => ({
+            ...note,
+            status,
+        }))]);
+    }
+
+    function removeNotes(indices: number[]) {
+        setNotes(prev => prev.filter((_, i) => !indices.includes(i)));
+    }
 
     useEffect(() => {
         async function fetchTrack() {
@@ -49,13 +68,14 @@ function useCurrentTrack() {
             );
             const midi = await loadMidi(signedUrl);
             if (midi.tracks.length > 0) {
-                setNotes(midi.tracks[0].notes);
+                _setNotes(midi.tracks[0].notes, "committed");
             }
         }
         fetchTrack();
     }, []);
 
-    return { notes, setNotes };
+    // Status doesn't matter in clearNotes but since we're hiding the confusion behind an abstraction I'll just leave it.
+    return { notes, setNotes: _setNotes, addNotes, removeNotes, clearNotes: () => _setNotes([], "candidate") };
 }
 
 function EditModeButtons({
@@ -83,25 +103,33 @@ function EditModeButtons({
     );
 }
 
+type NoteStatus = "committed" | "candidate";
+
+type AnnotatedNoteJSON = NoteJSON & {
+    status: NoteStatus;
+};
+
+
 function BigButton() {
     const [selectedIdx, setSelectedIdx] = useState(-1);
     const [isGenerating, setIsGenerating] = useState(false);
     // I think that ultimately we just just use the tonejs midi format but for now
     // I just want to see that it works so we'll massage temp into that format
     const [ideas, setIdeas] = useState<NoteJSON[][]>([]);
+
+
     const { playNotes } = useAudio();
     const { mode, setMode } = useEditMode();
-    const { notes, setNotes } = useCurrentTrack();
-    const [currentIdea, setCurrentIdea] = useState<NoteJSON[] | null>(null);
+    const { notes, setNotes, addNotes, clearNotes, removeNotes } = useCurrentNotes();
 
     function onClear() {
-        setNotes([]);
+        clearNotes();
     }
 
     async function onClickGenerate() {
         setIsGenerating(true);
         // Save the midi first until we have a better way to do this
-        await noteClient.post("/api/save_track", { notes });
+        await saveTrack(notes);
         const ideas = await noteClient.post<NoteJSON[][]>(
             "/api/continue_track"
         );
@@ -110,33 +138,28 @@ function BigButton() {
     }
 
     async function onClickPlay() {
-        const aggregatedNotes = [...notes, ...(currentIdea ?? [])];
-        playNotes(aggregatedNotes);
+        playNotes(notes);
     }
 
     async function onClickSave() {
-        await noteClient.post("/api/save_track", { notes });
+        await saveTrack(notes);
     }
 
     async function onCommitIdea() {
-        if (currentIdea) {
-            const _aggregatedNotes = [...notes, ...currentIdea];
-            await noteClient.post("/api/save_track", {
-                notes: _aggregatedNotes,
-            });
-            setNotes(_aggregatedNotes);
-            setCurrentIdea(null);
-            setIdeas([]);
-            setSelectedIdx(-1);
+        const isSaved = await saveTrack(notes);
+        if (isSaved) {
+            // todo(will) Update set notes to accept a callback
+            setNotes(notes, "committed");
         }
     }
+
 
     return (
         <div className="flex flex-col gap-4 items-center">
             <ContinuedSequence
                 ideas={ideas}
                 onSelect={(idx) => {
-                    setCurrentIdea(ideas[idx]);
+                    addNotes(ideas[idx], "candidate");
                     setSelectedIdx(idx);
                 }}
                 selectedIdx={selectedIdx}
@@ -144,9 +167,9 @@ function BigButton() {
             <PianoRoll
                 width={1450}
                 height={700}
-                incumbentNotes={notes}
-                candidateNotes={currentIdea ?? []}
-                setNotes={setNotes}
+                notes={notes}
+                addNotes={addNotes}
+                removeNotes={removeNotes}
                 mode={mode}
             />
 
