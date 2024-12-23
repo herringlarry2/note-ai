@@ -94,6 +94,8 @@ export function PianoRoll({
         setNotes((prev) => [...prev.filter((n) => !isSameNote(n, oldNote)), newNote]);
     };  
 
+    const isDraggable = mode === "point";
+
     return (
         <DndContext onDragEnd={handleDragEnd}>
             <div
@@ -141,6 +143,7 @@ export function PianoRoll({
                         index={index}
                         onClick={(e) => handleNoteClick(index, e)}
                         color="emerald"
+                        draggable={isDraggable}
                     />
                 );
             })}
@@ -154,6 +157,7 @@ export function PianoRoll({
                         index={index}
                         onClick={(e) => handleNoteClick(index, e)}
                         color="orange"
+                        draggable={isDraggable}
                     />
                 );
             })}
