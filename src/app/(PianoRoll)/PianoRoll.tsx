@@ -7,6 +7,8 @@ import Note from "./Note";
 import NoteCell from "./NoteCell";
 import NoteLabel from "./NoteLabel";
 import { EditMode } from "../(BigButton)/useEditMode";
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
+import { deriveNewNote } from "./deriveNewNote";
 
 // Current Notes
 
@@ -16,6 +18,13 @@ import { EditMode } from "../(BigButton)/useEditMode";
 // 1. If there are suggestions, then we should display them
 // 2. The suggestions should be displayed as a different color
 // 3. Users can commit these suggestions or cycle through them
+
+function isSameNote(a: NoteJSON, b: NoteJSON) {
+    return a.name === b.name && a.ticks === b.ticks && a.durationTicks === b.durationTicks && a.velocity === b.velocity && a.time === b.time && a.midi === b.midi && a.duration === b.duration;
+}
+
+// TODO(will): This should be a user setting. Also maybe can add more fine-grained control over quantization.
+const QUANTIZED = true;
 
 export function PianoRoll({
     incumbentNotes,
@@ -72,13 +81,27 @@ export function PianoRoll({
         }
     };
 
+    const handleDragEnd = (event: DragEndEvent) => {
+        // old note
+        const oldNote = event.active.data.current as NoteJSON;
+        // new note
+        const newNote = deriveNewNote(event.delta.x, event.delta.y, cellHeight, oldNote,QUANTIZED);
+
+        if (newNote === null) {
+            return;
+        }
+        // remove old note + add new note
+        setNotes((prev) => [...prev.filter((n) => !isSameNote(n, oldNote)), newNote]);
+    };  
+
     return (
-        <div
-            className="relative border border-zinc-700 overflow-auto"
-            style={{ width, height }}
-        >
-            {/* Grid */}
-            <div className="absolute" style={{ width: totalWidth }}>
+        <DndContext onDragEnd={handleDragEnd}>
+            <div
+                className="relative border border-zinc-700 overflow-auto"
+                style={{ width, height }}
+            >
+                {/* Grid */}
+                <div className="absolute" style={{ width: totalWidth }}>
                 {/* Piano Roll Note Labels */}
                 {ALL_NOTES.map((noteName) => (
                     <div
@@ -134,6 +157,7 @@ export function PianoRoll({
                     />
                 );
             })}
-        </div>
+            </div>
+        </DndContext>
     );
 }
