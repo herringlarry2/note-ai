@@ -11,6 +11,7 @@ export default function Note({
     index,
     onClick,
     color = "emerald",
+    draggable,
 }: {
     note: NoteJSON;
     cellWidth: number;
@@ -18,11 +19,14 @@ export default function Note({
     index: number;
     onClick: (e: React.MouseEvent) => void;
     color?: "emerald" | "orange";
+    draggable: boolean;
 }) {
+
     const noteId = `note-${index}-${note.name}`;
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
         id: noteId,
         data: note,
+        disabled: !draggable,
     });
     const rowIndex = ALL_NOTES.indexOf(note.name);
     const left = (note.ticks / TICKS_PER_16TH) * cellWidth + 48; // Add 48px for labels
