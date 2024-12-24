@@ -3,6 +3,7 @@ import { NoteJSON } from "../types/Midi";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { useDragSelect } from "./DragContext";
 
 export default function Note({
     note,
@@ -23,11 +24,13 @@ export default function Note({
 }) {
 
     const noteId = `note-${index}-${note.name}`;
-    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    const { attributes, listeners, setNodeRef, node, transform } = useDraggable({
         id: noteId,
         data: note,
         disabled: !draggable,
     });
+
+    const ds = useDragSelect();
     const rowIndex = ALL_NOTES.indexOf(note.name);
     const left = (note.ticks / TICKS_PER_16TH) * cellWidth + 48; // Add 48px for labels
     const width = (note.durationTicks / TICKS_PER_16TH) * cellWidth;
@@ -42,6 +45,24 @@ export default function Note({
         e.stopPropagation();
         onClick(e); 
     };
+
+    // adding a selectable element
+  useEffect(() => {
+    const element = node.current as unknown as HTMLElement;
+    if (!element || !ds) return;
+    ds.addSelectables(element);
+  }, [ds, node]);
+
+  // subscribing to a callback
+  useEffect(() => {
+    if (!ds) return;
+    const id = ds.subscribe("DS:end", (e) => {
+      // do something
+      console.log(e);
+    });
+
+    return () => ds.unsubscribe("DS:end", undefined, id!);
+  }, [ds]);
 
 
     return (

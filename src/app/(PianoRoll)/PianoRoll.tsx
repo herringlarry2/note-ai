@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { NoteJSON } from "../types/Midi";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import Note from "./Note";
 import NoteCell from "./NoteCell";
@@ -10,6 +9,7 @@ import { EditMode } from "../(BigButton)/useEditMode";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { deriveNewNote } from "./deriveNewNote";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
+import { DragSelectProvider } from "./DragContext";
 
 // Current Notes
 
@@ -95,6 +95,7 @@ export function PianoRoll({
 
     return (
         <DndContext onDragEnd={handleDragEnd}>
+            <DragSelectProvider>
             <div
                 className="relative border border-zinc-700 overflow-auto"
                 style={{ width, height }}
@@ -143,8 +144,9 @@ export function PianoRoll({
                         draggable={isDraggable}
                     />
                 );
-            })}
+                })}
             </div>
+            </DragSelectProvider>
         </DndContext>
     );
 }
