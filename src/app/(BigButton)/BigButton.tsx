@@ -1,20 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import noteClient from "../../../api/noteClient";
-import { type TrackJSON } from "@tonejs/midi";
-import { loadMidi } from "../utils/midi";
 import { type NoteJSON } from "../types/Midi";
 import { useAudio } from "../utils/audio";
 import ContinuedSequence from "./ContinuedSequence";
 import { PianoRoll } from "../(PianoRoll)/PianoRoll";
-import { EditMode, useEditMode } from "./useEditMode";
-import {
-    CursorArrowRaysIcon,
-    PencilIcon,
-    TrashIcon,
-} from "@heroicons/react/24/outline";
+import {  useEditMode } from "./useEditMode";
+
 import useManageNotes from "./useManageNotes";
+import EditModeButtons from "./EditModeButtons";
 
 
 function Spinner() {
@@ -23,31 +18,6 @@ function Spinner() {
     );
 }
 
-
-function EditModeButtons({
-    mode,
-    setMode,
-}: {
-    mode: EditMode;
-    setMode: React.Dispatch<React.SetStateAction<EditMode>>;
-}) {
-    return (
-        <div className="flex flex-row gap-2">
-            <button
-                className={`px-4 py-2 bg-black text-white rounded-full border border-white ${mode === "point" ? "opacity-100" : "opacity-50"}`}
-                onClick={() => setMode("point")}
-            >
-                <CursorArrowRaysIcon className="h-6 w-6" />
-            </button>
-            <button
-                className={`px-4 py-2 bg-black text-white rounded-full border border-white ${mode === "write" ? "opacity-100" : "opacity-50"}`}
-                onClick={() => setMode("write")}
-            >
-                <PencilIcon className="h-6 w-6" />
-            </button>
-        </div>
-    );
-}
 
 function BigButton() {
     const [selectedIdx, setSelectedIdx] = useState(-1);
