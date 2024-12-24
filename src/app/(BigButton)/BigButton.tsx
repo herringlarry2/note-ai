@@ -14,6 +14,7 @@ import {
     PencilIcon,
     TrashIcon,
 } from "@heroicons/react/24/outline";
+import useManageNotes from "./useManageNotes";
 
 
 function Spinner() {
@@ -51,16 +52,13 @@ function EditModeButtons({
 function BigButton() {
     const [selectedIdx, setSelectedIdx] = useState(-1);
     const [isGenerating, setIsGenerating] = useState(false);
-    // I think that ultimately we just just use the tonejs midi format but for now
-    // I just want to see that it works so we'll massage temp into that format
     const [ideas, setIdeas] = useState<NoteJSON[][]>([]);
     const { playNotes } = useAudio();
     const { mode, setMode } = useEditMode();
-    const { notes, setNotes } = useCurrentTrack();
-    const [currentIdea, setCurrentIdea] = useState<NoteJSON[] | null>(null);
+    const { notes, addNotes, removeNotes, commitNotes, clearNotes } = useManageNotes();
 
     function onClear() {
-        setNotes([]);
+        clearNotes();
     }
 
     async function onClickGenerate() {
@@ -75,8 +73,7 @@ function BigButton() {
     }
 
     async function onClickPlay() {
-        const aggregatedNotes = [...notes, ...(currentIdea ?? [])];
-        playNotes(aggregatedNotes);
+        playNotes(notes);
     }
 
     async function onClickSave() {
@@ -84,16 +81,12 @@ function BigButton() {
     }
 
     async function onCommitIdea() {
-        if (currentIdea) {
-            const _aggregatedNotes = [...notes, ...currentIdea];
-            await noteClient.post("/api/save_track", {
-                notes: _aggregatedNotes,
-            });
-            setNotes(_aggregatedNotes);
-            setCurrentIdea(null);
-            setIdeas([]);
-            setSelectedIdx(-1);
-        }
+        await noteClient.post("/api/save_track", {
+            notes: notes,
+        });
+        commitNotes();
+        setIdeas([]);
+        setSelectedIdx(-1);
     }
 
     return (
@@ -101,7 +94,11 @@ function BigButton() {
             <ContinuedSequence
                 ideas={ideas}
                 onSelect={(idx) => {
-                    setCurrentIdea(ideas[idx]);
+                    // Remove current idea
+                    const uncommittedNotes = notes.filter((note) => !note.committed);
+                    removeNotes(uncommittedNotes);
+                    // Add new idea
+                    addNotes(ideas[idx].map((note) => ({ ...note, committed: false })));
                     setSelectedIdx(idx);
                 }}
                 selectedIdx={selectedIdx}
@@ -109,9 +106,9 @@ function BigButton() {
             <PianoRoll
                 width={1450}
                 height={700}
-                incumbentNotes={notes}
-                candidateNotes={currentIdea ?? []}
-                setNotes={setNotes}
+                notes={notes}
+                addNotes={addNotes}
+                removeNotes={removeNotes}
                 mode={mode}
             />
 
