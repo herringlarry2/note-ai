@@ -10,6 +10,7 @@ import { EditMode } from "../(BigButton)/useEditMode";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { deriveNewNote } from "./deriveNewNote";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
+import { Root } from "./DragSelect";
 
 // Current Notes
 
@@ -95,6 +96,7 @@ export function PianoRoll({
 
     return (
         <DndContext onDragEnd={handleDragEnd}>
+            <Root>
             <div
                 className="relative border border-zinc-700 overflow-auto"
                 style={{ width, height }}
@@ -145,6 +147,7 @@ export function PianoRoll({
                 );
             })}
             </div>
+            </Root>
         </DndContext>
     );
 }
