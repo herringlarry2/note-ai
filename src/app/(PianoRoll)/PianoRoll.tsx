@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useState } from "react";
 import { NoteJSON } from "../types/Midi";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import Note from "./Note";
@@ -10,6 +10,7 @@ import { EditMode } from "../(BigButton)/useEditMode";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { deriveNewNote } from "./deriveNewNote";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
+import { Box, boxesIntersect, useSelectionContainer } from "@air/react-drag-to-select";
 
 // Current Notes
 
@@ -38,6 +39,51 @@ export function PianoRoll({
     height: number;
     mode: EditMode;
 }) {
+
+    const [selectionBox, setSelectionBox] = useState<Box | null>(null);
+    const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
+    const selectableItems = useRef<Box[]>([]);
+    const pianoRollContainerRef = useRef<HTMLDivElement>(null);
+
+    const { DragSelection } = useSelectionContainer({
+        eventsElement: pianoRollContainerRef.current,
+        onSelectionChange: (box) => {
+          /**
+           * Here we make sure to adjust the box's left and top with the scroll position of the window
+           * @see https://github.com/AirLabsTeam/react-drag-to-select/#scrolling
+           */
+          console.log(box);
+          const scrollAwareBox: Box = {
+            ...box,
+            top: box.top + (pianoRollContainerRef.current?.scrollTop ?? 0),
+            left: box.left + (pianoRollContainerRef.current?.scrollLeft ?? 0)
+          };
+    
+          setSelectionBox(scrollAwareBox);
+          return scrollAwareBox;
+        },
+        onSelectionStart: (e) => {
+          console.log("OnSelectionStart", e);
+        },
+        onSelectionEnd: () => console.log("OnSelectionEnd"),
+        selectionProps: {
+          style: {
+            border: "2px dashed red",
+            borderRadius: 4,
+            backgroundColor: "brown",
+            opacity: 0.5,
+            zIndex: 1000,
+            position:"absolute",
+          }
+        },
+        isEnabled: true
+      });
+
+    console.log(DragSelection);
+
+
+
+
     const cellHeight = Math.max(height / ALL_NOTES.length, 20);
     const cellWidth = TICKS_PER_16TH;
     const maxTicks =
@@ -96,9 +142,12 @@ export function PianoRoll({
     return (
         <DndContext onDragEnd={handleDragEnd}>
             <div
+                id="piano-roll-container"
                 className="relative border border-zinc-700 overflow-auto"
                 style={{ width, height }}
+                ref={pianoRollContainerRef}
             >
+                <DragSelection/>
                 {/* Grid */}
                 <div className="absolute" style={{ width: totalWidth }}>
                 {/* Piano Roll Note Labels */}
