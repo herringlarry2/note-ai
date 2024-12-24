@@ -1,6 +1,7 @@
 // This funtion determines where a note shoudl move once it is dropped.
 // dnd-kits useDroppable hook slows down the app, so we need to implement this manually.
 
+import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
 import { NoteJSON } from "../types/Midi";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 
@@ -31,7 +32,7 @@ export function deriveNewNote(
     cellHeight: number,
     oldNote: NoteJSON,
     quantized: boolean = true
-): NoteJSON | null {
+): ExtendedNoteJSON | null {
     // Say you have a note that is at 300px on the y-axis from 0 -> height px.
     // You want to find the first note that is greater than 300 px to get the note that is below the note you are dropping.
     const yPositions = getAllNotesYPositions(cellHeight);
