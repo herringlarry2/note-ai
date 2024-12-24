@@ -30,7 +30,6 @@ export default function Note({
         disabled: !draggable,
     });
 
-    const ds = useDragSelect();
     const rowIndex = ALL_NOTES.indexOf(note.name);
     const left = (note.ticks / TICKS_PER_16TH) * cellWidth + 48; // Add 48px for labels
     const width = (note.durationTicks / TICKS_PER_16TH) * cellWidth;
@@ -45,24 +44,6 @@ export default function Note({
         e.stopPropagation();
         onClick(e); 
     };
-
-    // adding a selectable element
-  useEffect(() => {
-    const element = node.current as unknown as HTMLElement;
-    if (!element || !ds) return;
-    ds.addSelectables(element);
-  }, [ds, node]);
-
-  // subscribing to a callback
-  useEffect(() => {
-    if (!ds) return;
-    const id = ds.subscribe("DS:end", (e) => {
-      // do something
-      console.log(e);
-    });
-
-    return () => ds.unsubscribe("DS:end", undefined, id!);
-  }, [ds]);
 
 
     return (

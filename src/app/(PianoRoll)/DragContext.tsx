@@ -30,6 +30,26 @@ function DragSelectProvider({ children, settings = {} }: ProviderProps) {
     ds?.setSettings(settings);
   }, [ds, settings]);
 
+  useEffect(() => {
+    ds?.subscribe("DS:end", (event) => {
+      console.log(event);
+    });
+
+    return () => {
+      ds?.unsubscribe("DS:end");
+    };
+  }, [ds]);
+
+  useEffect(() => {
+    ds?.subscribe("DS:scroll", (event) => {
+      console.log(event);
+    });
+
+    return () => {
+      ds?.unsubscribe("DS:scroll");
+    };
+  }, [ds]);
+
   return <Context.Provider value={ds}>{children}</Context.Provider>;
 }
 
