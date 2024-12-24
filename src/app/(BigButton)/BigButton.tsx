@@ -40,6 +40,10 @@ function Spinner() {
     );
 }
 
+function isSameNote(note1: NoteJSON, note2: NoteJSON) {
+    return note1.name === note2.name && note1.durationTicks === note2.durationTicks && note1.ticks === note2.ticks && note1.velocity === note2.velocity && note1.name === note2.name;
+}
+
 function useCurrentNotes() {
     const [notes, setNotes] = useState<AnnotatedNoteJSON[]>([]);
 
@@ -50,15 +54,15 @@ function useCurrentNotes() {
         })));
     }
 
-    function addNotes(newNotes: AnnotatedNoteJSON[] | NoteJSON[], status: NoteStatus) {
+    function addNotes(newNotes: AnnotatedNoteJSON[] | NoteJSON[], status?: NoteStatus) {
         setNotes(prev => [...prev, ...newNotes.map(note => ({
             ...note,
-            status,
+            status: status ?? ('status' in note ? note.status : 'candidate'),
         }))]);
     }
 
-    function removeNotes(indices: number[]) {
-        setNotes(prev => prev.filter((_, i) => !indices.includes(i)));
+    function removeNotes(notes: AnnotatedNoteJSON[]) {
+        setNotes(prev => prev.filter(note => !notes.some(n => isSameNote(note, n))));
     }
 
     useEffect(() => {

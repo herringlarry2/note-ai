@@ -19,9 +19,6 @@ import { deriveNewNote } from "./deriveNewNote";
 // 2. The suggestions should be displayed as a different color
 // 3. Users can commit these suggestions or cycle through them
 
-function isSameNote(a: NoteJSON, b: NoteJSON) {
-    return a.name === b.name && a.ticks === b.ticks && a.durationTicks === b.durationTicks && a.velocity === b.velocity && a.time === b.time && a.midi === b.midi && a.duration === b.duration;
-}
 
 // TODO(will): This should be a user setting. Also maybe can add more fine-grained control over quantization.
 const QUANTIZED = true;
@@ -29,13 +26,14 @@ const QUANTIZED = true;
 export function PianoRoll({
     notes,
     addNotes,
+    removeNotes,
     width,
     height,
     mode,
 }: {
     notes: AnnotatedNoteJSON[];
-    addNotes: (newNotes: AnnotatedNoteJSON[], status: NoteStatus) => void;
-    removeNotes: (indices: number[]) => void;
+    addNotes: (newNotes: AnnotatedNoteJSON[] | NoteJSON[], status?: NoteStatus) => void;
+    removeNotes: (notes: AnnotatedNoteJSON[] | NoteJSON[]) => void;
     width: number;
     height: number;
     mode: EditMode;
@@ -75,7 +73,7 @@ export function PianoRoll({
         e.stopPropagation(); // Prevent triggering handleCellClick
         // If we are in write mode, then we should delete the note
         if (mode === "write") {
-            removeNotes([index])
+            removeNotes([notes[index]])
         }
     };
 
@@ -90,7 +88,7 @@ export function PianoRoll({
         }
         // remove old note + add new note
         removeNotes([oldNote]);
-        addNotes([newNote], "candidate");
+        addNotes([newNote]);
     };  
 
     const isDraggable = mode === "point";
