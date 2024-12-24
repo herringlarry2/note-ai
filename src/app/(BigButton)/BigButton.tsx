@@ -15,23 +15,6 @@ import {
     TrashIcon,
 } from "@heroicons/react/24/outline";
 
-function useMidiNotes(
-    currentIdea: NoteJSON[] | null,
-    originalMidiNotes: NoteJSON[] | null
-) {
-    const [midiNotes, setMidiNotes] = useState<NoteJSON[]>([]);
-
-    useEffect(() => {
-        if (currentIdea || originalMidiNotes) {
-            setMidiNotes([
-                ...(currentIdea ?? []),
-                ...(originalMidiNotes ?? []),
-            ]);
-        }
-    }, [currentIdea, originalMidiNotes]);
-
-    return { midiNotes, setMidiNotes };
-}
 
 function Spinner() {
     return (
@@ -39,24 +22,6 @@ function Spinner() {
     );
 }
 
-function useCurrentTrack() {
-    const [notes, setNotes] = useState<NoteJSON[]>([]);
-
-    useEffect(() => {
-        async function fetchTrack() {
-            const { signedUrl } = await noteClient.get<{ signedUrl: string }>(
-                "/api/sign_s3"
-            );
-            const midi = await loadMidi(signedUrl);
-            if (midi.tracks.length > 0) {
-                setNotes(midi.tracks[0].notes);
-            }
-        }
-        fetchTrack();
-    }, []);
-
-    return { notes, setNotes };
-}
 
 function EditModeButtons({
     mode,
