@@ -3,14 +3,10 @@ import { NoteJSON } from "../types/Midi";
 import { loadMidi } from "../utils/midi";
 import noteClient from "../../../api/noteClient";
 
-type ExtendedNoteJSON = NoteJSON & { committed: boolean };
+export type ExtendedNoteJSON = NoteJSON & { committed: boolean };
 
-function useCurrentTrack() {
 
-}
-
-export default function useMidiNotes(
-) {
+export default function useManageNotes() {
     const [notes, setNotes] = useState<ExtendedNoteJSON[]>([]);
 
     function addNotes(newNotes: ExtendedNoteJSON[]) {
@@ -28,6 +24,10 @@ export default function useMidiNotes(
         })));
     }
 
+    function clearNotes() {
+        setNotes([]);
+    }
+
     useEffect(() => {
         async function fetchTrack() {
             const { signedUrl } = await noteClient.get<{ signedUrl: string }>(
@@ -38,6 +38,9 @@ export default function useMidiNotes(
                 const extendedNotes = midi.tracks[0].notes.map((note) => ({
                     ...note,
                     committed: true,
+                    name: note.name,
+                    time: note.time,
+                    duration: note.duration,
                 }));
                 setNotes(extendedNotes);
             }
@@ -45,6 +48,6 @@ export default function useMidiNotes(
         fetchTrack();
     }, []);
 
-    return { notes, addNotes, removeNotes, commitNotes };
+    return { notes, addNotes, removeNotes, commitNotes, clearNotes };
 
 }

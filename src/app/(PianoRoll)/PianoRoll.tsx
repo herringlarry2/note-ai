@@ -9,6 +9,7 @@ import NoteLabel from "./NoteLabel";
 import { EditMode } from "../(BigButton)/useEditMode";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { deriveNewNote } from "./deriveNewNote";
+import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
 
 // Current Notes
 
@@ -19,30 +20,24 @@ import { deriveNewNote } from "./deriveNewNote";
 // 2. The suggestions should be displayed as a different color
 // 3. Users can commit these suggestions or cycle through them
 
-function isSameNote(a: NoteJSON, b: NoteJSON) {
-    return a.name === b.name && a.ticks === b.ticks && a.durationTicks === b.durationTicks && a.velocity === b.velocity && a.time === b.time && a.midi === b.midi && a.duration === b.duration;
-}
-
 // TODO(will): This should be a user setting. Also maybe can add more fine-grained control over quantization.
 const QUANTIZED = true;
 
 export function PianoRoll({
-    incumbentNotes,
-    candidateNotes,
-    setNotes,
+    notes,
+    addNotes,
+    removeNotes,
     width,
     height,
     mode,
 }: {
-    incumbentNotes: NoteJSON[];
-    candidateNotes: NoteJSON[];
-    setNotes: React.Dispatch<React.SetStateAction<NoteJSON[]>>;
+    notes: ExtendedNoteJSON[];
+    addNotes: (newNotes: ExtendedNoteJSON[]) => void;
+    removeNotes: (notes: ExtendedNoteJSON[]) => void;
     width: number;
     height: number;
     mode: EditMode;
 }) {
-    const notes = [...incumbentNotes, ...candidateNotes];
-
     const cellHeight = Math.max(height / ALL_NOTES.length, 20);
     const cellWidth = TICKS_PER_16TH;
     const maxTicks =
@@ -60,7 +55,7 @@ export function PianoRoll({
 
     const handleCellClick = (noteName: string, columnIndex: number) => {
         if (mode === "write") {
-            const newNote: NoteJSON = {
+            const newNote: ExtendedNoteJSON = {
                 name: noteName,
                 velocity: 1,
                 ticks: columnIndex * TICKS_PER_16TH,
@@ -68,8 +63,9 @@ export function PianoRoll({
                 time: 0,
                 midi: 0,
                 duration: 0,
+                committed: true,
             };
-            setNotes((prev) => [...prev, newNote]);
+            addNotes([newNote]);
         }
     };
 
@@ -77,13 +73,13 @@ export function PianoRoll({
         e.stopPropagation(); // Prevent triggering handleCellClick
         // If we are in write mode, then we should delete the note
         if (mode === "write") {
-            setNotes((prev) => prev.filter((_, i) => i !== index));
+            removeNotes([notes[index]]);
         }
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
         // old note
-        const oldNote = event.active.data.current as NoteJSON;
+        const oldNote = event.active.data.current as ExtendedNoteJSON;
         // new note
         const newNote = deriveNewNote(event.delta.x, event.delta.y, cellHeight, oldNote,QUANTIZED);
 
@@ -91,7 +87,8 @@ export function PianoRoll({
             return;
         }
         // remove old note + add new note
-        setNotes((prev) => [...prev.filter((n) => !isSameNote(n, oldNote)), newNote]);
+        removeNotes([oldNote]);
+        addNotes([newNote]);
     };  
 
     const isDraggable = mode === "point";
@@ -133,7 +130,7 @@ export function PianoRoll({
             </div>
 
             {/* Notes */}
-            {incumbentNotes.map((note, index) => {
+            {notes.map((note, index) => {
                 return (
                     <Note
                         key={`note-${index}-${note.name}`}
@@ -142,21 +139,7 @@ export function PianoRoll({
                         cellHeight={cellHeight}
                         index={index}
                         onClick={(e) => handleNoteClick(index, e)}
-                        color="emerald"
-                        draggable={isDraggable}
-                    />
-                );
-            })}
-            {candidateNotes.map((note, index) => {
-                return (
-                    <Note
-                        key={`candidate-note-${index}-${note.name}`}
-                        note={note}
-                        cellWidth={cellWidth}
-                        cellHeight={cellHeight}
-                        index={index}
-                        onClick={(e) => handleNoteClick(index, e)}
-                        color="orange"
+                        color={note.committed ? "emerald" : "orange"}
                         draggable={isDraggable}
                     />
                 );
