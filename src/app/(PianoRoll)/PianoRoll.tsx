@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { NoteJSON } from "../types/Midi";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import Note from "./Note";
@@ -53,6 +53,8 @@ export function PianoRoll({
 
     const totalWidth = Math.max(width, totalColumns * cellWidth + 48);
 
+    const [selectedNotes, setSelectedNotes] = useState<ExtendedNoteJSON[]>([]);
+
     const handleCellClick = (noteName: string, columnIndex: number) => {
         if (mode === "write") {
             const newNote: ExtendedNoteJSON = {
@@ -70,10 +72,29 @@ export function PianoRoll({
     };
 
     const handleNoteClick = (index: number, e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent triggering handleCellClick
+        // console.log("clicked note");
+        // e.stopPropagation(); // Prevent triggering handleCellClick
         // If we are in write mode, then we should delete the note
         if (mode === "write") {
             removeNotes([notes[index]]);
+        } else if (mode === "point") {
+            alert("clicked note");
+            console.log("clicked note");
+            setSelectedNotes((prev) => {
+                const noteToToggle = notes[index];
+                const isSelected = prev.some(
+                    (note) =>
+                        note.ticks === noteToToggle.ticks &&
+                        note.name === noteToToggle.name
+                );
+                return isSelected
+                    ? prev.filter(
+                          (note) =>
+                              note.ticks !== noteToToggle.ticks ||
+                              note.name !== noteToToggle.name
+                      )
+                    : [...prev, noteToToggle];
+            });
         }
     };
 
@@ -81,7 +102,13 @@ export function PianoRoll({
         // old note
         const oldNote = event.active.data.current as ExtendedNoteJSON;
         // new note
-        const newNote = deriveNewNote(event.delta.x, event.delta.y, cellHeight, oldNote,QUANTIZED);
+        const newNote = deriveNewNote(
+            event.delta.x,
+            event.delta.y,
+            cellHeight,
+            oldNote,
+            QUANTIZED
+        );
 
         if (newNote === null) {
             return;
@@ -89,62 +116,93 @@ export function PianoRoll({
         // remove old note + add new note
         removeNotes([oldNote]);
         addNotes([newNote]);
-    };  
+    };
 
     const isDraggable = mode === "point";
 
     return (
-        <DndContext onDragEnd={handleDragEnd}>
+        <DndContext
+            onDragEnd={handleDragEnd}
+            onDragStart={(e) => {
+                console.log(e);
+            }}
+        >
             <div
                 className="relative border border-zinc-700 overflow-auto"
                 style={{ width, height }}
             >
                 {/* Grid */}
                 <div className="absolute" style={{ width: totalWidth }}>
-                {/* Piano Roll Note Labels */}
-                {ALL_NOTES.map((noteName) => (
-                    <div
-                        key={noteName}
-                        className="relative"
-                        style={{ height: cellHeight }}
-                    >
-                        {/* Note Label */}
-                        <NoteLabel noteName={noteName} />
-                        {/* Grid Cells */}
-                        {Array.from({ length: totalColumns }).map(
-                            (_, colIndex) => (
-                                <NoteCell
-                                    key={`note-cell-${noteName}-${colIndex}`}
-                                    noteName={noteName}
-                                    colIndex={colIndex}
-                                    cellWidth={cellWidth}
-                                    cellHeight={cellHeight}
-                                    onClick={() =>
-                                        handleCellClick(noteName, colIndex)
-                                    }
-                                />
-                            )
-                        )}
-                    </div>
-                ))}
-            </div>
+                    {/* Piano Roll Note Labels */}
+                    {ALL_NOTES.map((noteName) => (
+                        <div
+                            key={noteName}
+                            className="relative"
+                            style={{ height: cellHeight }}
+                        >
+                            {/* Note Label */}
+                            <NoteLabel noteName={noteName} />
+                            {/* Grid Cells */}
+                            {Array.from({ length: totalColumns }).map(
+                                (_, colIndex) => (
+                                    <NoteCell
+                                        key={`note-cell-${noteName}-${colIndex}`}
+                                        noteName={noteName}
+                                        colIndex={colIndex}
+                                        cellWidth={cellWidth}
+                                        cellHeight={cellHeight}
+                                        onClick={() =>
+                                            handleCellClick(noteName, colIndex)
+                                        }
+                                    />
+                                )
+                            )}
+                        </div>
+                    ))}
+                </div>
 
-            {/* Notes */}
-            {notes.map((note, index) => {
-                return (
-                    <Note
-                        key={`note-${index}-${note.name}`}
-                        note={note}
-                        cellWidth={cellWidth}
-                        cellHeight={cellHeight}
-                        index={index}
-                        onClick={(e) => handleNoteClick(index, e)}
-                        color={note.committed ? "emerald" : "orange"}
-                        draggable={isDraggable}
-                    />
-                );
-            })}
+                {/* Notes */}
+                <DraggableNotes
+                    notes={notes}
+                    cellWidth={cellWidth}
+                    cellHeight={cellHeight}
+                    handleNoteClick={handleNoteClick}
+                    isDraggable={isDraggable}
+                    selectedNotes={selectedNotes}
+                />
             </div>
         </DndContext>
     );
+}
+
+function DraggableNotes({
+    notes,
+    cellWidth,
+    cellHeight,
+    handleNoteClick,
+    isDraggable,
+    selectedNotes,
+}: {
+    notes: ExtendedNoteJSON[];
+    cellWidth: number;
+    cellHeight: number;
+    handleNoteClick: (index: number, e: React.MouseEvent) => void;
+    isDraggable: boolean;
+    selectedNotes: ExtendedNoteJSON[];
+}) {
+    return notes.map((note, index) => {
+        return (
+            <Note
+                key={`note-${index}-${note.name}`}
+                note={note}
+                cellWidth={cellWidth}
+                cellHeight={cellHeight}
+                index={index}
+                onClick={(e) => handleNoteClick(index, e)}
+                color={note.committed ? "emerald" : "orange"}
+                selected={selectedNotes.includes(note)}
+                transform={""}
+            />
+        );
+    });
 }
