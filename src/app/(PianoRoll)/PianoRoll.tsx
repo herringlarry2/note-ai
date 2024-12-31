@@ -1,15 +1,14 @@
 "use client";
 
-import React from "react";
-import { NoteJSON } from "../types/Midi";
+import React, { useCallback } from "react";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import Note from "./Note";
-import NoteCell from "./NoteCell";
-import NoteLabel from "./NoteLabel";
 import { EditMode } from "../(BigButton)/useEditMode";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { deriveNewNote } from "./deriveNewNote";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
+import PianoRollRow from "./PianoRow";
+import getGridDimensions from "./getGridDimensions";
 
 // Current Notes
 
@@ -22,6 +21,19 @@ import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
 
 // TODO(will): This should be a user setting. Also maybe can add more fine-grained control over quantization.
 const QUANTIZED = true;
+
+function createNote(noteName: string, ticks: number) {
+    return {
+        name: noteName,
+        velocity: 1,
+        ticks: ticks,
+        durationTicks: TICKS_PER_16TH,
+        time: 0,
+        midi: 0,
+        duration: 0,
+        committed: true,
+    };
+}
 
 export function PianoRoll({
     notes,
@@ -38,36 +50,19 @@ export function PianoRoll({
     height: number;
     mode: EditMode;
 }) {
-    const cellHeight = Math.max(height / ALL_NOTES.length, 20);
-    const cellWidth = TICKS_PER_16TH;
-    const maxTicks =
-        notes.length > 0
-            ? Math.max(...notes.map((n) => n.ticks + n.durationTicks))
-            : 0;
-    const minimumColumns = Math.max(
-        Math.ceil(maxTicks / TICKS_PER_16TH) + 4,
-        Math.floor(width / cellWidth)
-    );
+    const { cellHeight, cellWidth, totalColumns, totalWidth } =
+        getGridDimensions(notes, width, height);
 
-    const totalColumns = minimumColumns;
+    // Extract handlers into separate functions for clarity
+    const handleCellClick = useCallback(
+        (noteName: string, columnIndex: number) => {
+            if (mode !== "write") return;
 
-    const totalWidth = Math.max(width, totalColumns * cellWidth + 48);
-
-    const handleCellClick = (noteName: string, columnIndex: number) => {
-        if (mode === "write") {
-            const newNote: ExtendedNoteJSON = {
-                name: noteName,
-                velocity: 1,
-                ticks: columnIndex * TICKS_PER_16TH,
-                durationTicks: TICKS_PER_16TH,
-                time: 0,
-                midi: 0,
-                duration: 0,
-                committed: true,
-            };
+            const newNote: ExtendedNoteJSON = createNote(noteName, columnIndex);
             addNotes([newNote]);
-        }
-    };
+        },
+        [mode, addNotes]
+    );
 
     const handleNoteClick = (index: number, e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent triggering handleCellClick
@@ -81,7 +76,13 @@ export function PianoRoll({
         // old note
         const oldNote = event.active.data.current as ExtendedNoteJSON;
         // new note
-        const newNote = deriveNewNote(event.delta.x, event.delta.y, cellHeight, oldNote,QUANTIZED);
+        const newNote = deriveNewNote(
+            event.delta.x,
+            event.delta.y,
+            cellHeight,
+            oldNote,
+            QUANTIZED
+        );
 
         if (newNote === null) {
             return;
@@ -89,7 +90,7 @@ export function PianoRoll({
         // remove old note + add new note
         removeNotes([oldNote]);
         addNotes([newNote]);
-    };  
+    };
 
     const isDraggable = mode === "point";
 
@@ -101,49 +102,33 @@ export function PianoRoll({
             >
                 {/* Grid */}
                 <div className="absolute" style={{ width: totalWidth }}>
-                {/* Piano Roll Note Labels */}
-                {ALL_NOTES.map((noteName) => (
-                    <div
-                        key={noteName}
-                        className="relative"
-                        style={{ height: cellHeight }}
-                    >
-                        {/* Note Label */}
-                        <NoteLabel noteName={noteName} />
-                        {/* Grid Cells */}
-                        {Array.from({ length: totalColumns }).map(
-                            (_, colIndex) => (
-                                <NoteCell
-                                    key={`note-cell-${noteName}-${colIndex}`}
-                                    noteName={noteName}
-                                    colIndex={colIndex}
-                                    cellWidth={cellWidth}
-                                    cellHeight={cellHeight}
-                                    onClick={() =>
-                                        handleCellClick(noteName, colIndex)
-                                    }
-                                />
-                            )
-                        )}
-                    </div>
-                ))}
-            </div>
+                    {ALL_NOTES.map((noteName) => (
+                        <PianoRollRow
+                            key={noteName}
+                            noteName={noteName}
+                            cellHeight={cellHeight}
+                            cellWidth={cellWidth}
+                            totalColumns={totalColumns}
+                            onCellClick={handleCellClick}
+                        />
+                    ))}
+                </div>
 
-            {/* Notes */}
-            {notes.map((note, index) => {
-                return (
-                    <Note
-                        key={`note-${index}-${note.name}`}
-                        note={note}
-                        cellWidth={cellWidth}
-                        cellHeight={cellHeight}
-                        index={index}
-                        onClick={(e) => handleNoteClick(index, e)}
-                        color={note.committed ? "emerald" : "orange"}
-                        draggable={isDraggable}
-                    />
-                );
-            })}
+                {/* Notes */}
+                {notes.map((note, index) => {
+                    return (
+                        <Note
+                            key={`note-${index}-${note.name}`}
+                            note={note}
+                            cellWidth={cellWidth}
+                            cellHeight={cellHeight}
+                            index={index}
+                            onClick={(e) => handleNoteClick(index, e)}
+                            color={note.committed ? "emerald" : "orange"}
+                            draggable={isDraggable}
+                        />
+                    );
+                })}
             </div>
         </DndContext>
     );
