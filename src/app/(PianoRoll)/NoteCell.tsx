@@ -1,18 +1,22 @@
 import { isBlackKey } from "./utils";
 
+interface NoteCellProps {
+    noteName: string;
+    colIndex: number;
+    cellWidth: number;
+    cellHeight: number;
+    onClick: () => void;
+    isBarLine?: boolean;
+}
+
 export default function NoteCell({
     noteName,
     colIndex,
     cellWidth,
     cellHeight,
     onClick,
-}: {
-    noteName: string;
-    colIndex: number;
-    cellWidth: number;
-    cellHeight: number;
-    onClick: () => void;
-}) {
+    isBarLine,
+}: NoteCellProps) {
     return (
         <div
             className={`absolute border-r border-b border-zinc-700/50
@@ -22,6 +26,7 @@ export default function NoteCell({
                                             : "bg-zinc-950 hover:bg-zinc-900"
                                     }
                                     transition-colors cursor-pointer
+                                    ${isBarLine ? "border-r-2" : "border-r-[1px]"}
                                 `}
             style={{
                 top: 0,
