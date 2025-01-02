@@ -58,7 +58,8 @@ export function PianoRoll({
         (noteName: string, columnIndex: number) => {
             if (mode !== "write") return;
 
-            const newNote: ExtendedNoteJSON = createNote(noteName, columnIndex);
+            const ticks = columnIndex * TICKS_PER_16TH;
+            const newNote: ExtendedNoteJSON = createNote(noteName, ticks);
             addNotes([newNote]);
         },
         [mode, addNotes]

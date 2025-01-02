@@ -25,6 +25,7 @@ export default function PianoRollRow({
                     cellWidth={cellWidth}
                     cellHeight={cellHeight}
                     onClick={() => onCellClick(noteName, colIndex)}
+                    isBarLine={(colIndex + 1) % 4 === 0}
                 />
             ))}
         </div>
