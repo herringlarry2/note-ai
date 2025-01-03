@@ -1,8 +1,7 @@
-import { useEffect } from "react";
 import { NoteJSON } from "../types/Midi";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
-import { useDraggable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
+import { useDragSelect } from "./DragSelectProvider";
+import { useEffect, useRef } from "react";
 
 export default function Note({
     note,
@@ -21,13 +20,16 @@ export default function Note({
     color?: "emerald" | "orange";
     draggable: boolean;
 }) {
-
     const noteId = `note-${index}-${note.name}`;
-    const { attributes, listeners, setNodeRef, transform } = useDraggable({
-        id: noteId,
-        data: note,
-        disabled: !draggable,
-    });
+    const ds = useDragSelect();
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (draggable && ds && ref.current) {
+            ds.addSelectables([ref.current]);
+        }
+    }, [draggable, ds]);
+
     const rowIndex = ALL_NOTES.indexOf(note.name);
     const left = (note.ticks / TICKS_PER_16TH) * cellWidth + 48; // Add 48px for labels
     const width = (note.durationTicks / TICKS_PER_16TH) * cellWidth;
@@ -40,16 +42,13 @@ export default function Note({
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        onClick(e); 
+        onClick(e);
     };
-
 
     return (
         <div
             id={noteId}
-            ref={setNodeRef}
-            {...attributes}
-            {...listeners}
+            ref={ref}
             //  Don't have a unique id unfortunately
             key={noteId}
             className={colorVariants[color]}
@@ -58,7 +57,7 @@ export default function Note({
                 left,
                 width,
                 height: cellHeight - 2,
-                transform: CSS.Transform.toString(transform),
+                position: "absolute",
             }}
             onClick={handleClick}
         />

@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import Note from "./Note";
 import { EditMode } from "../(BigButton)/useEditMode";
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { deriveNewNote } from "./deriveNewNote";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
 import PianoRollRow from "./PianoRow";
 import getGridDimensions from "./getGridDimensions";
+import { DragSelectProvider } from "./DragSelectProvider";
 
 // Current Notes
 
@@ -50,6 +50,7 @@ export function PianoRoll({
     height: number;
     mode: EditMode;
 }) {
+    const dragContainer = useRef<HTMLDivElement>(null);
     const { cellHeight, cellWidth, totalColumns, totalWidth } =
         getGridDimensions(notes, width, height);
 
@@ -96,10 +97,15 @@ export function PianoRoll({
     const isDraggable = mode === "point";
 
     return (
-        <DndContext onDragEnd={handleDragEnd}>
+        <DragSelectProvider
+            settings={{
+                area: dragContainer.current ?? undefined,
+            }}
+        >
             <div
                 className="relative border border-zinc-700 overflow-auto"
                 style={{ width, height }}
+                ref={dragContainer}
             >
                 {/* Grid */}
                 <div className="absolute" style={{ width: totalWidth }}>
@@ -131,6 +137,6 @@ export function PianoRoll({
                     );
                 })}
             </div>
-        </DndContext>
+        </DragSelectProvider>
     );
 }
