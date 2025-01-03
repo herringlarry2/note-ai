@@ -26,7 +26,7 @@ export default function Note({
 
     useEffect(() => {
         if (draggable && ds && ref.current) {
-            ds.addSelectables([ref.current]);
+            ds.addSelectables(ref.current);
         }
     }, [draggable, ds]);
 
@@ -41,7 +41,7 @@ export default function Note({
     };
 
     const handleClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
+        e.preventDefault();
         onClick(e);
     };
 
@@ -57,7 +57,6 @@ export default function Note({
                 left,
                 width,
                 height: cellHeight - 2,
-                position: "absolute",
             }}
             onClick={handleClick}
         />
