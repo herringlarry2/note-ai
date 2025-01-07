@@ -20,7 +20,7 @@ export default function Note({
     color?: "emerald" | "orange";
     draggable: boolean;
 }) {
-    const noteId = `note-${index}-${note.name}`;
+    const noteId = `note-${index}-${note.name}-${note.ticks}-${note.durationTicks}`;
     const ds = useDragSelect();
     const ref = useRef<HTMLDivElement>(null);
 
@@ -46,10 +46,11 @@ export default function Note({
     };
 
     return (
-        <div
+        <button
             id={noteId}
             ref={ref}
             //  Don't have a unique id unfortunately
+            draggable={false}
             key={noteId}
             className={colorVariants[color]}
             style={{

@@ -4,13 +4,21 @@ import DragSelect, { DSInputElement } from "dragselect";
 type ProviderProps = {
     children: React.ReactNode;
     settings?: ConstructorParameters<typeof DragSelect<DSInputElement>>[0];
+    updateNotes: (data: {
+        items: DSInputElement[];
+        event?: MouseEvent | TouchEvent | null | undefined | KeyboardEvent;
+    }) => void;
 };
 
 const Context = createContext<DragSelect<DSInputElement> | undefined>(
     undefined
 );
 
-function DragSelectProvider({ children, settings = {} }: ProviderProps) {
+function DragSelectProvider({
+    children,
+    settings = {},
+    updateNotes,
+}: ProviderProps) {
     const [ds, setDS] = useState<DragSelect<DSInputElement>>();
 
     useEffect(() => {
@@ -34,29 +42,13 @@ function DragSelectProvider({ children, settings = {} }: ProviderProps) {
 
     useEffect(() => {
         if (ds) {
-            ds.subscribe("DS:end", (e) => {
-                // On end update the notes to the nearest cell
+            ds.subscribe("DS:end", ({ items, event, isDragging }) => {
+                if (isDragging) {
+                    updateNotes({ items, event });
+                }
             });
         }
-    }, [ds]);
-
-    useEffect(() => {
-        if (ds) {
-            ds.subscribe("dragstart", ({ event, items }) => {
-                event.preventDefault(); // Prevent default position recalculation
-                console.log("Drag started:", items);
-            });
-        }
-    }, [ds]);
-
-    useEffect(() => {
-        if (ds) {
-            ds.subscribe("DS:select", ({ event, items }) => {
-                console.log("event", event);
-                console.log("Drag ended:", items);
-            });
-        }
-    }, [ds]);
+    }, [ds, updateNotes]);
 
     return <Context.Provider value={ds}>{children}</Context.Provider>;
 }

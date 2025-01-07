@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import Note from "./Note";
 import { EditMode } from "../(BigButton)/useEditMode";
@@ -9,6 +9,7 @@ import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
 import PianoRollRow from "./PianoRow";
 import getGridDimensions from "./getGridDimensions";
 import { DragSelectProvider } from "./DragSelectProvider";
+import { DSInputElement } from "dragselect";
 
 // Current Notes
 
@@ -51,6 +52,9 @@ export function PianoRoll({
     mode: EditMode;
 }) {
     const dragContainer = useRef<HTMLDivElement>(null);
+
+    const [selectedNotes, setSelectedNotes] = useState<ExtendedNoteJSON[]>([]);
+
     const { cellHeight, cellWidth, totalColumns, totalWidth } =
         getGridDimensions(notes, width, height);
 
@@ -74,7 +78,7 @@ export function PianoRoll({
         }
     };
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = () => {
         // old note
         const oldNote = event.active.data.current as ExtendedNoteJSON;
         // new note
@@ -94,6 +98,37 @@ export function PianoRoll({
         addNotes([newNote]);
     };
 
+    const updateNotes = ({
+        items,
+        event,
+    }: {
+        items: DSInputElement[];
+        event?: MouseEvent | TouchEvent | null | undefined | KeyboardEvent;
+    }) => {
+        const noteIds = items.map((item) => item.id);
+        const notesFromIds = noteIds.map((id) => {
+            const [_, _1, noteName, ticks, durationTicks] = id.split("-");
+            return notes.find(
+                (n) =>
+                    n.name === noteName &&
+                    n.ticks === parseInt(ticks) &&
+                    n.durationTicks === parseInt(durationTicks)
+            );
+        });
+
+        const transformX = event?.clientX ?? 0;
+        const transformY = event?.clientY ?? 0;
+        console.log(event);
+
+        removeNotes(notesFromIds.filter((n) => n !== undefined));
+        addNotes(
+            notesFromIds
+                .filter((n) => n !== undefined)
+                .map((n) => deriveNewNote(0, 0, cellHeight, n, QUANTIZED))
+                .filter((n) => n !== null)
+        );
+    };
+
     const isDraggable = mode === "point";
 
     return (
@@ -101,6 +136,7 @@ export function PianoRoll({
             settings={{
                 area: dragContainer.current ?? undefined,
             }}
+            updateNotes={updateNotes}
         >
             <div
                 className="relative border border-zinc-700 overflow-auto"
