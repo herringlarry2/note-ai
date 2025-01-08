@@ -8,16 +8,36 @@ type ProviderProps = {
         items: DSInputElement[];
         event?: MouseEvent | TouchEvent | null | undefined | KeyboardEvent;
     }) => void;
+    setSelectedNotes: (items: DSInputElement[]) => void;
 };
 
 const Context = createContext<DragSelect<DSInputElement> | undefined>(
     undefined
 );
 
+function useSubscribe({
+    event,
+    callback,
+    ds,
+}: {
+    event: "DS:end";
+    callback: (data: any) => void;
+    ds?: DragSelect<DSInputElement>;
+}) {
+    useEffect(() => {
+        if (!ds) return;
+        ds.subscribe(event, callback);
+        return () => {
+            ds.unsubscribe(event);
+        };
+    }, [ds, event, callback]);
+}
+
 function DragSelectProvider({
     children,
     settings = {},
     updateNotes,
+    setSelectedNotes,
 }: ProviderProps) {
     const [ds, setDS] = useState<DragSelect<DSInputElement>>();
 
@@ -40,15 +60,21 @@ function DragSelectProvider({
         }
     }, [ds, settings]);
 
-    useEffect(() => {
-        if (ds) {
-            ds.subscribe("DS:end", ({ items, event, isDragging }) => {
-                if (isDragging) {
-                    updateNotes({ items, event });
-                }
-            });
-        }
-    }, [ds, updateNotes]);
+    useSubscribe({
+        event: "DS:end",
+        callback: ({ items, event, isDragging }) => {
+            if (isDragging) {
+                // we've just dragged a selection
+                ds?.clearSelection();
+                updateNotes({ items, event });
+            } else {
+                // we've made a selection
+
+                setSelectedNotes(items);
+            }
+        },
+        ds,
+    });
 
     return <Context.Provider value={ds}>{children}</Context.Provider>;
 }

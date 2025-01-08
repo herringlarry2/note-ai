@@ -23,6 +23,16 @@ import { DSInputElement } from "dragselect";
 // TODO(will): This should be a user setting. Also maybe can add more fine-grained control over quantization.
 const QUANTIZED = true;
 
+function getNoteFromId(id: string, notes: ExtendedNoteJSON[]) {
+    const [_, _1, noteName, ticks, durationTicks] = id.split("-");
+    return notes.find(
+        (n) =>
+            n.name === noteName &&
+            n.ticks === parseInt(ticks) &&
+            n.durationTicks === parseInt(durationTicks)
+    );
+}
+
 function createNote(noteName: string, ticks: number) {
     return {
         name: noteName,
@@ -78,26 +88,6 @@ export function PianoRoll({
         }
     };
 
-    const handleDragEnd = () => {
-        // old note
-        const oldNote = event.active.data.current as ExtendedNoteJSON;
-        // new note
-        const newNote = deriveNewNote(
-            event.delta.x,
-            event.delta.y,
-            cellHeight,
-            oldNote,
-            QUANTIZED
-        );
-
-        if (newNote === null) {
-            return;
-        }
-        // remove old note + add new note
-        removeNotes([oldNote]);
-        addNotes([newNote]);
-    };
-
     const updateNotes = ({
         items,
         event,
@@ -105,6 +95,8 @@ export function PianoRoll({
         items: DSInputElement[];
         event?: MouseEvent | TouchEvent | null | undefined | KeyboardEvent;
     }) => {
+        if (!items.length) return;
+
         const noteIds = items.map((item) => item.id);
         const notesFromIds = noteIds.map((id) => {
             const [_, _1, noteName, ticks, durationTicks] = id.split("-");
@@ -116,17 +108,29 @@ export function PianoRoll({
             );
         });
 
-        const transformX = event?.clientX ?? 0;
-        const transformY = event?.clientY ?? 0;
-        console.log(event);
+        const transform = items[0].style.transform;
+        // No transform means we are not dragging
+        if (!transform) return;
+
+        // Get the transform values
+        const transformX = transform.split("(")[1].split(",")[0];
+        const transformY = transform.split("(")[1].split(",")[1];
 
         removeNotes(notesFromIds.filter((n) => n !== undefined));
-        addNotes(
-            notesFromIds
-                .filter((n) => n !== undefined)
-                .map((n) => deriveNewNote(0, 0, cellHeight, n, QUANTIZED))
-                .filter((n) => n !== null)
-        );
+        const notesToAdd = notesFromIds
+            .filter((n) => n !== undefined)
+            .map((n) =>
+                deriveNewNote(
+                    parseInt(transformX),
+                    parseInt(transformY),
+                    cellHeight,
+                    n,
+                    QUANTIZED
+                )
+            )
+            .filter((n) => n !== null);
+        addNotes(notesToAdd);
+        setSelectedNotes(notesToAdd);
     };
 
     const isDraggable = mode === "point";
@@ -137,6 +141,13 @@ export function PianoRoll({
                 area: dragContainer.current ?? undefined,
             }}
             updateNotes={updateNotes}
+            setSelectedNotes={(items: DSInputElement[]) =>
+                setSelectedNotes(
+                    items
+                        .map((item) => getNoteFromId(item.id, notes))
+                        .filter((n) => n !== undefined)
+                )
+            }
         >
             <div
                 className="relative border border-zinc-700 overflow-auto"
@@ -169,6 +180,7 @@ export function PianoRoll({
                             onClick={(e) => handleNoteClick(index, e)}
                             color={note.committed ? "emerald" : "orange"}
                             draggable={isDraggable}
+                            isSelected={selectedNotes.includes(note)}
                         />
                     );
                 })}
