@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import Note from "./Note";
 import { EditMode } from "../(BigButton)/useEditMode";
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { deriveNewNote } from "./deriveNewNote";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
 import PianoRollRow from "./PianoRow";
 import getGridDimensions from "./getGridDimensions";
+import { DragSelectProvider } from "./DragSelectProvider";
+import { DSInputElement } from "dragselect";
 
 // Current Notes
 
@@ -21,6 +22,16 @@ import getGridDimensions from "./getGridDimensions";
 
 // TODO(will): This should be a user setting. Also maybe can add more fine-grained control over quantization.
 const QUANTIZED = true;
+
+function getNoteFromId(id: string, notes: ExtendedNoteJSON[]) {
+    const [_, _1, noteName, ticks, durationTicks] = id.split("-");
+    return notes.find(
+        (n) =>
+            n.name === noteName &&
+            n.ticks === parseInt(ticks) &&
+            n.durationTicks === parseInt(durationTicks)
+    );
+}
 
 function createNote(noteName: string, ticks: number) {
     return {
@@ -50,6 +61,10 @@ export function PianoRoll({
     height: number;
     mode: EditMode;
 }) {
+    const dragContainer = useRef<HTMLDivElement>(null);
+
+    const [selectedNotes, setSelectedNotes] = useState<ExtendedNoteJSON[]>([]);
+
     const { cellHeight, cellWidth, totalColumns, totalWidth } =
         getGridDimensions(notes, width, height);
 
@@ -73,33 +88,71 @@ export function PianoRoll({
         }
     };
 
-    const handleDragEnd = (event: DragEndEvent) => {
-        // old note
-        const oldNote = event.active.data.current as ExtendedNoteJSON;
-        // new note
-        const newNote = deriveNewNote(
-            event.delta.x,
-            event.delta.y,
-            cellHeight,
-            oldNote,
-            QUANTIZED
-        );
+    const updateNotes = ({
+        items,
+        event,
+    }: {
+        items: DSInputElement[];
+        event?: MouseEvent | TouchEvent | null | undefined | KeyboardEvent;
+    }) => {
+        if (!items.length) return;
 
-        if (newNote === null) {
-            return;
-        }
-        // remove old note + add new note
-        removeNotes([oldNote]);
-        addNotes([newNote]);
+        const noteIds = items.map((item) => item.id);
+        const notesFromIds = noteIds.map((id) => {
+            const [_, _1, noteName, ticks, durationTicks] = id.split("-");
+            return notes.find(
+                (n) =>
+                    n.name === noteName &&
+                    n.ticks === parseInt(ticks) &&
+                    n.durationTicks === parseInt(durationTicks)
+            );
+        });
+
+        const transform = items[0].style.transform;
+        // No transform means we are not dragging
+        if (!transform) return;
+
+        // Get the transform values
+        const transformX = transform.split("(")[1].split(",")[0];
+        const transformY = transform.split("(")[1].split(",")[1];
+
+        removeNotes(notesFromIds.filter((n) => n !== undefined));
+        const notesToAdd = notesFromIds
+            .filter((n) => n !== undefined)
+            .map((n) =>
+                deriveNewNote(
+                    parseInt(transformX),
+                    parseInt(transformY),
+                    cellHeight,
+                    n,
+                    QUANTIZED
+                )
+            )
+            .filter((n) => n !== null);
+        addNotes(notesToAdd);
+        setSelectedNotes(notesToAdd);
     };
 
     const isDraggable = mode === "point";
 
     return (
-        <DndContext onDragEnd={handleDragEnd}>
+        <DragSelectProvider
+            settings={{
+                area: dragContainer.current ?? undefined,
+            }}
+            updateNotes={updateNotes}
+            setSelectedNotes={(items: DSInputElement[]) =>
+                setSelectedNotes(
+                    items
+                        .map((item) => getNoteFromId(item.id, notes))
+                        .filter((n) => n !== undefined)
+                )
+            }
+        >
             <div
                 className="relative border border-zinc-700 overflow-auto"
                 style={{ width, height }}
+                ref={dragContainer}
             >
                 {/* Grid */}
                 <div className="absolute" style={{ width: totalWidth }}>
@@ -127,10 +180,11 @@ export function PianoRoll({
                             onClick={(e) => handleNoteClick(index, e)}
                             color={note.committed ? "emerald" : "orange"}
                             draggable={isDraggable}
+                            isSelected={selectedNotes.includes(note)}
                         />
                     );
                 })}
             </div>
-        </DndContext>
+        </DragSelectProvider>
     );
 }
