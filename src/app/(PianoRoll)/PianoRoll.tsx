@@ -85,6 +85,8 @@ export function PianoRoll({
         // If we are in write mode, then we should delete the note
         if (mode === "write") {
             removeNotes([notes[index]]);
+        } else {
+            setSelectedNotes([notes[index]]);
         }
     };
 
