@@ -17,6 +17,7 @@ export default function Note({
     isSelected,
     resizeWidth,
     handleResize,
+    commitResize,
 }: {
     note: NoteJSON;
     cellWidth: number;
@@ -28,6 +29,7 @@ export default function Note({
     isSelected: boolean;
     resizeWidth: number;
     handleResize: (width: number) => void;
+    commitResize: () => void;
 }) {
     const noteId = `note-${index}-${note.name}-${note.ticks}-${note.durationTicks}`;
     const ds = useDragSelect();
@@ -82,11 +84,11 @@ export default function Note({
                 console.log("onResize", size);
                 e.preventDefault();
                 ds?.break();
-                handleResize(size.width - originalWidth, { commit: false });
+                handleResize(size.width - originalWidth);
             }}
             onResizeStop={(e, { size }) => {
                 ds?.break();
-                handleResize(size.width - originalWidth, { commit: true });
+                commitResize();
             }}
             handle={
                 <div
