@@ -11,6 +11,14 @@ import getGridDimensions from "./getGridDimensions";
 import { DragSelectProvider } from "./DragSelectProvider";
 import { DSInputElement } from "dragselect";
 
+export function widthFromDurationTicks(ticks: number, cellWidth: number) {
+    return (ticks / TICKS_PER_16TH) * cellWidth;
+}
+
+export function ticksFromWidth(width: number, cellWidth: number) {
+    return (width / cellWidth) * TICKS_PER_16TH;
+}
+
 // Current Notes
 
 // Prospective candidates
@@ -137,6 +145,24 @@ export function PianoRoll({
 
     const isDraggable = mode === "point";
 
+    const [resizeWidth, setResizeWidth] = useState(0);
+
+    function commitResize() {
+        removeNotes(selectedNotes);
+        const newNotes = selectedNotes.map((note) => {
+            return {
+                ...note,
+                durationTicks:
+                    note.durationTicks + ticksFromWidth(resizeWidth, cellWidth),
+            };
+        });
+        addNotes(newNotes);
+        setResizeWidth(0);
+    }
+
+    // If note is selected then we should resize all selected notes
+    // If note is not selected then we should clear the selection and add it to the selection and then resize selected notes
+
     return (
         <DragSelectProvider
             settings={{
@@ -183,6 +209,17 @@ export function PianoRoll({
                             color={note.committed ? "emerald" : "orange"}
                             draggable={isDraggable}
                             isSelected={selectedNotes.includes(note)}
+                            resizeWidth={resizeWidth}
+                            handleResize={(width: number) => {
+                                // if selected
+                                if (!selectedNotes.includes(note)) {
+                                    setSelectedNotes([note]);
+                                    setResizeWidth(width);
+                                } else {
+                                    setResizeWidth(width);
+                                }
+                            }}
+                            commitResize={commitResize}
                         />
                     );
                 })}

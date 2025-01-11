@@ -1,8 +1,10 @@
-import { DSInputElement } from "dragselect";
 import { NoteJSON } from "../types/Midi";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import { useDragSelect } from "./DragSelectProvider";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Resizable } from "react-resizable";
+
+import { widthFromDurationTicks } from "./PianoRoll";
 
 export default function Note({
     note,
@@ -13,6 +15,8 @@ export default function Note({
     color = "emerald",
     draggable,
     isSelected,
+    resizeWidth,
+    handleResize,
 }: {
     note: NoteJSON;
     cellWidth: number;
@@ -22,6 +26,8 @@ export default function Note({
     color?: "emerald" | "orange";
     draggable: boolean;
     isSelected: boolean;
+    resizeWidth: number;
+    handleResize: (width: number) => void;
 }) {
     const noteId = `note-${index}-${note.name}-${note.ticks}-${note.durationTicks}`;
     const ds = useDragSelect();
@@ -46,7 +52,8 @@ export default function Note({
 
     const rowIndex = ALL_NOTES.indexOf(note.name);
     const left = (note.ticks / TICKS_PER_16TH) * cellWidth + 48; // Add 48px for labels
-    const width = (note.durationTicks / TICKS_PER_16TH) * cellWidth;
+    const originalWidth = widthFromDurationTicks(note.durationTicks, cellWidth);
+    const width = originalWidth + (isSelected ? resizeWidth : 0);
 
     const colorVariants = {
         emerald:
@@ -67,21 +74,45 @@ export default function Note({
     const colorKey = color;
 
     return (
-        <div
-            id={noteId}
-            ref={ref}
-            //  Don't have a unique id unfortunately
-            draggable={false}
-            key={noteId}
-            className={colorVariants[colorKey as keyof typeof colorVariants]}
-            style={{
-                top: rowIndex * cellHeight + 1,
-                left,
-                width,
-                height: cellHeight - 2,
-                border: isSelected ? "2px solid white" : "none",
+        <Resizable
+            width={width}
+            axis="x"
+            height={cellHeight - 2}
+            onResize={(e, { size }) => {
+                console.log("onResize", size);
+                e.preventDefault();
+                ds?.break();
+                handleResize(size.width - originalWidth, { commit: false });
             }}
-            onClick={handleClick}
-        />
+            onResizeStop={(e, { size }) => {
+                ds?.break();
+                handleResize(size.width - originalWidth, { commit: true });
+            }}
+            handle={
+                <div
+                    onClick={(e) => e.preventDefault()}
+                    className="absolute right-0 w-2 h-full bg-transparent cursor-col-resize"
+                />
+            }
+        >
+            <div
+                id={noteId}
+                ref={ref}
+                //  Don't have a unique id unfortunately
+                draggable={false}
+                key={noteId}
+                className={
+                    colorVariants[colorKey as keyof typeof colorVariants]
+                }
+                style={{
+                    width,
+                    height: cellHeight - 2,
+                    top: rowIndex * cellHeight + 1,
+                    left,
+                    border: isSelected ? "2px solid white" : "none",
+                }}
+                onClick={handleClick}
+            />
+        </Resizable>
     );
 }
