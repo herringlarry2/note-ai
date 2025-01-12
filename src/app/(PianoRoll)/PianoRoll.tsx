@@ -10,6 +10,7 @@ import PianoRollRow from "./PianoRow";
 import getGridDimensions from "./getGridDimensions";
 import { DragSelectProvider } from "./DragSelectProvider";
 import { DSInputElement } from "dragselect";
+import useDragResize from "./useDragResize";
 
 export function widthFromDurationTicks(ticks: number, cellWidth: number) {
     return (ticks / TICKS_PER_16TH) * cellWidth;
@@ -18,15 +19,6 @@ export function widthFromDurationTicks(ticks: number, cellWidth: number) {
 export function ticksFromWidth(width: number, cellWidth: number) {
     return (width / cellWidth) * TICKS_PER_16TH;
 }
-
-// Current Notes
-
-// Prospective candidates
-
-// Requirements
-// 1. If there are suggestions, then we should display them
-// 2. The suggestions should be displayed as a different color
-// 3. Users can commit these suggestions or cycle through them
 
 // TODO(will): This should be a user setting. Also maybe can add more fine-grained control over quantization.
 const QUANTIZED = true;
@@ -76,6 +68,14 @@ export function PianoRoll({
     const { cellHeight, cellWidth, totalColumns, totalWidth } =
         getGridDimensions(notes, width, height);
 
+    const { commitResize, handleResize, resizeWidth } = useDragResize(
+        selectedNotes,
+        setSelectedNotes,
+        cellWidth,
+        removeNotes,
+        addNotes
+    );
+
     // Extract handlers into separate functions for clarity
     const handleCellClick = useCallback(
         (noteName: string, columnIndex: number) => {
@@ -109,13 +109,7 @@ export function PianoRoll({
 
         const noteIds = items.map((item) => item.id);
         const notesFromIds = noteIds.map((id) => {
-            const [_, _1, noteName, ticks, durationTicks] = id.split("-");
-            return notes.find(
-                (n) =>
-                    n.name === noteName &&
-                    n.ticks === parseInt(ticks) &&
-                    n.durationTicks === parseInt(durationTicks)
-            );
+            return getNoteFromId(id, notes);
         });
 
         const transform = items[0].style.transform;
@@ -126,7 +120,10 @@ export function PianoRoll({
         const transformX = transform.split("(")[1].split(",")[0];
         const transformY = transform.split("(")[1].split(",")[1];
 
+        // Remove the old selected notes
         removeNotes(notesFromIds.filter((n) => n !== undefined));
+
+        // Create new, relocated notes
         const notesToAdd = notesFromIds
             .filter((n) => n !== undefined)
             .map((n) =>
@@ -139,43 +136,28 @@ export function PianoRoll({
                 )
             )
             .filter((n) => n !== null);
+
+        // Add the new notes
         addNotes(notesToAdd);
+        // Set the selected notes to the new notes
         setSelectedNotes(notesToAdd);
     };
 
     const isDraggable = mode === "point";
-
-    const [resizeWidth, setResizeWidth] = useState(0);
-
-    function commitResize() {
-        removeNotes(selectedNotes);
-        const newNotes = selectedNotes.map((note) => {
-            return {
-                ...note,
-                durationTicks:
-                    note.durationTicks + ticksFromWidth(resizeWidth, cellWidth),
-            };
-        });
-        addNotes(newNotes);
-        setResizeWidth(0);
-    }
-
-    // If note is selected then we should resize all selected notes
-    // If note is not selected then we should clear the selection and add it to the selection and then resize selected notes
 
     return (
         <DragSelectProvider
             settings={{
                 area: dragContainer.current ?? undefined,
             }}
-            updateNotes={updateNotes}
-            setSelectedNotes={(items: DSInputElement[]) =>
+            onDragEnd={updateNotes}
+            onDragSelect={(items: DSInputElement[]) => {
                 setSelectedNotes(
                     items
                         .map((item) => getNoteFromId(item.id, notes))
                         .filter((n) => n !== undefined)
-                )
-            }
+                );
+            }}
         >
             <div
                 className="relative border border-zinc-700 overflow-auto"
@@ -204,21 +186,15 @@ export function PianoRoll({
                             note={note}
                             cellWidth={cellWidth}
                             cellHeight={cellHeight}
+                            resizeWidth={resizeWidth}
                             index={index}
                             onClick={(e) => handleNoteClick(index, e)}
                             color={note.committed ? "emerald" : "orange"}
                             draggable={isDraggable}
                             isSelected={selectedNotes.includes(note)}
-                            resizeWidth={resizeWidth}
-                            handleResize={(width: number) => {
-                                // if selected
-                                if (!selectedNotes.includes(note)) {
-                                    setSelectedNotes([note]);
-                                    setResizeWidth(width);
-                                } else {
-                                    setResizeWidth(width);
-                                }
-                            }}
+                            handleResize={(resizeWidth) =>
+                                handleResize(note, resizeWidth)
+                            }
                             commitResize={commitResize}
                         />
                     );
