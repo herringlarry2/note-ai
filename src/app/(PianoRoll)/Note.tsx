@@ -6,6 +6,16 @@ import { Resizable } from "react-resizable";
 
 import { widthFromDurationTicks } from "./PianoRoll";
 
+const colorVariants = {
+    emerald:
+        "absolute rounded-sm shadow-md bg-emerald-500 hover:bg-emerald-400 cursor-pointer transition-colors",
+    orange: "absolute rounded-sm shadow-md bg-orange-500 hover:bg-orange-400 cursor-pointer transition-colors",
+    emeraldSelected:
+        "absolute rounded-sm shadow-md bg-emerald-500 hover:bg-emerald-400 cursor-pointer transition-color ring-2 ring-white",
+    orangeSelected:
+        "absolute rounded-sm shadow-md bg-orange-500 hover:bg-orange-400 cursor-pointer transition-colors transition-colors ring-2 ring-white",
+};
+
 export default function Note({
     note,
     cellWidth,
@@ -57,16 +67,6 @@ export default function Note({
     const originalWidth = widthFromDurationTicks(note.durationTicks, cellWidth);
     const width = originalWidth + (isSelected ? resizeWidth : 0);
 
-    const colorVariants = {
-        emerald:
-            "absolute rounded-sm shadow-md bg-emerald-500 hover:bg-emerald-400 cursor-pointer transition-colors",
-        orange: "absolute rounded-sm shadow-md bg-orange-500 hover:bg-orange-400 cursor-pointer transition-colors",
-        emeraldSelected:
-            "absolute rounded-sm shadow-md bg-emerald-500 hover:bg-emerald-400 cursor-pointer transition-color ring-2 ring-white",
-        orangeSelected:
-            "absolute rounded-sm shadow-md bg-orange-500 hover:bg-orange-400 cursor-pointer transition-colors transition-colors ring-2 ring-white",
-    };
-
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
         onClick(e);
@@ -80,27 +80,28 @@ export default function Note({
             width={width}
             axis="x"
             height={cellHeight - 2}
-            onResize={(e, { size }) => {
-                console.log("onResize", size);
+            onResize={(e: any, { size }: any) => {
                 e.preventDefault();
+                // Prevent the drag select from being triggered
                 ds?.break();
                 handleResize(size.width - originalWidth);
             }}
-            onResizeStop={(e, { size }) => {
+            onResizeStop={(e: any, { size }: any) => {
+                // Prevent the drag select from being triggered
                 ds?.break();
                 commitResize();
             }}
             handle={
                 <div
-                    onClick={(e) => e.preventDefault()}
                     className="absolute right-0 w-2 h-full bg-transparent cursor-col-resize"
+                    onClick={(e) => e.preventDefault()}
                 />
             }
         >
             <div
+                //  Don't have a unique id unfortunately
                 id={noteId}
                 ref={ref}
-                //  Don't have a unique id unfortunately
                 draggable={false}
                 key={noteId}
                 className={
