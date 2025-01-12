@@ -63,6 +63,7 @@ function DragSelectProvider({
     useSubscribe({
         event: "DS:end",
         callback: ({ items, event, isDragging }) => {
+            console.log("DS:end", items, event, isDragging);
             if (isDragging) {
                 // we've just dragged a selection
                 ds?.clearSelection();

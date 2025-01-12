@@ -11,6 +11,7 @@ import getGridDimensions from "./getGridDimensions";
 import { DragSelectProvider } from "./DragSelectProvider";
 import { DSInputElement } from "dragselect";
 import useDragResize from "./useDragResize";
+import { useNoteHandlers } from "./useNoteHandlers";
 
 export function widthFromDurationTicks(ticks: number, cellWidth: number) {
     return (ticks / TICKS_PER_16TH) * cellWidth;
@@ -31,19 +32,6 @@ function getNoteFromId(id: string, notes: ExtendedNoteJSON[]) {
             n.ticks === parseInt(ticks) &&
             n.durationTicks === parseInt(durationTicks)
     );
-}
-
-function createNote(noteName: string, ticks: number) {
-    return {
-        name: noteName,
-        velocity: 1,
-        ticks: ticks,
-        durationTicks: TICKS_PER_16TH,
-        time: 0,
-        midi: 0,
-        duration: 0,
-        committed: true,
-    };
 }
 
 export function PianoRoll({
@@ -76,27 +64,14 @@ export function PianoRoll({
         addNotes
     );
 
-    // Extract handlers into separate functions for clarity
-    const handleCellClick = useCallback(
-        (noteName: string, columnIndex: number) => {
-            if (mode !== "write") return;
-
-            const ticks = columnIndex * TICKS_PER_16TH;
-            const newNote: ExtendedNoteJSON = createNote(noteName, ticks);
-            addNotes([newNote]);
-        },
-        [mode, addNotes]
+    // Cell click is for when there's no note
+    const { handleCellClick, handleNoteClick } = useNoteHandlers(
+        mode,
+        addNotes,
+        removeNotes,
+        setSelectedNotes,
+        notes
     );
-
-    const handleNoteClick = (index: number, e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent triggering handleCellClick
-        // If we are in write mode, then we should delete the note
-        if (mode === "write") {
-            removeNotes([notes[index]]);
-        } else {
-            setSelectedNotes([notes[index]]);
-        }
-    };
 
     const updateNotes = ({
         items,
@@ -182,7 +157,7 @@ export function PianoRoll({
                 {notes.map((note, index) => {
                     return (
                         <Note
-                            key={`note-${index}-${note.name}`}
+                            key={`note-${index}-${note.name}-${note.ticks}-${note.durationTicks}`}
                             note={note}
                             cellWidth={cellWidth}
                             cellHeight={cellHeight}
