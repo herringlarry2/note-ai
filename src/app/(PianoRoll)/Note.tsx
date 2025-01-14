@@ -88,8 +88,9 @@ export default function Note({
                 handleResize(size.width - originalWidth);
             }}
             onResizeStop={(e: any, { size }: any) => {
-                // Prevent the drag select from being triggered
                 e.preventDefault();
+                // Prevent the drag select from being triggered
+                ds?.break();
                 commitResize();
             }}
             handle={

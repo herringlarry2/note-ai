@@ -35,6 +35,7 @@ export function PianoRoll({
     const { cellHeight, cellWidth, totalColumns, totalWidth } =
         getGridDimensions(notes, width, height);
 
+    // Combine into one function to make it simpler to pass through
     function updateNotes(
         oldNotes: ExtendedNoteJSON[],
         newNotes: ExtendedNoteJSON[]
