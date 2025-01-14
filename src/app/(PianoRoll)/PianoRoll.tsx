@@ -1,15 +1,11 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
-import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
-import Note from "./Note";
+import React, { useRef, useState } from "react";
+import { TICKS_PER_16TH } from "./constants";
 import { EditMode } from "../(BigButton)/useEditMode";
-import { deriveNewNote } from "./deriveNewNote";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
-import PianoRollRow from "./PianoRow";
 import getGridDimensions from "./getGridDimensions";
 import { DragSelectProvider } from "./DragSelectProvider";
-import { DSInputElement } from "dragselect";
 import useResizeHandlers from "./useResizeHandlers";
 import { useNoteHandlers } from "./useNoteHandlers";
 import useDragHandlers from "./useDragHandlers";
