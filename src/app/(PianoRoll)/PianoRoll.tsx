@@ -47,6 +47,7 @@ export function PianoRoll({
     const { cellHeight, cellWidth, totalColumns, totalWidth } =
         getGridDimensions(notes, width, height);
 
+    // When you drag the end of a note to resize it
     const { commitResize, handleResize, resizeWidth } = useResizeHandlers(
         selectedNotes,
         setSelectedNotes,
@@ -55,7 +56,7 @@ export function PianoRoll({
         addNotes
     );
 
-    // Cell click is for when there's no note
+    // When you click an empty cell or a note, only used in "write" mode
     const { handleCellClick, handleNoteClick } = useNoteHandlers(
         mode,
         addNotes,
@@ -64,6 +65,7 @@ export function PianoRoll({
         notes
     );
 
+    // When you drag a note, only used in "point" mode
     const { handleDragEnd, handleDragSelect, isDraggable } = useDragHandlers(
         mode,
         notes,
@@ -82,47 +84,105 @@ export function PianoRoll({
             handleDragEnd={handleDragEnd}
             handleDragSelect={handleDragSelect}
         >
-            <div
-                className="relative border border-zinc-700 overflow-auto"
-                style={{ width, height }}
-                ref={dragContainer}
-            >
-                {/* Grid */}
-                <div className="absolute" style={{ width: totalWidth }}>
-                    {ALL_NOTES.map((noteName) => (
-                        <PianoRollRow
-                            key={noteName}
-                            noteName={noteName}
-                            cellHeight={cellHeight}
-                            cellWidth={cellWidth}
-                            totalColumns={totalColumns}
-                            onCellClick={handleCellClick}
-                        />
-                    ))}
-                </div>
-
-                {/* Notes */}
-                {notes.map((note, index) => {
-                    return (
-                        <Note
-                            key={`note-${index}-${note.name}-${note.ticks}-${note.durationTicks}`}
-                            note={note}
-                            cellWidth={cellWidth}
-                            cellHeight={cellHeight}
-                            resizeWidth={resizeWidth}
-                            index={index}
-                            onClick={(e) => handleNoteClick(index, e)}
-                            color={note.committed ? "emerald" : "orange"}
-                            draggable={isDraggable}
-                            isSelected={selectedNotes.includes(note)}
-                            handleResize={(resizeWidth) =>
-                                handleResize(note, resizeWidth)
-                            }
-                            commitResize={commitResize}
-                        />
-                    );
-                })}
-            </div>
+            {/* In charge of rendering the grid and notes and hooking up the resize and drag handlers */}
+            <PianoGrid
+                notes={notes}
+                // Dimensions
+                cellWidth={cellWidth}
+                cellHeight={cellHeight}
+                width={width}
+                height={height}
+                totalWidth={totalWidth}
+                totalColumns={totalColumns}
+                // Handlers
+                handleCellClick={handleCellClick}
+                handleNoteClick={handleNoteClick}
+                commitResize={commitResize}
+                handleResize={handleResize}
+                // Drag + Resize state
+                selectedNotes={selectedNotes}
+                isDraggable={isDraggable}
+                resizeWidth={resizeWidth}
+                dragContainer={dragContainer}
+            />
         </DragSelectProvider>
+    );
+}
+
+function PianoGrid({
+    notes,
+    cellWidth,
+    cellHeight,
+    totalColumns,
+    handleCellClick,
+    handleNoteClick,
+    commitResize,
+    handleResize,
+    resizeWidth,
+    isDraggable,
+    selectedNotes,
+    dragContainer,
+    width,
+    height,
+    totalWidth,
+}: {
+    notes: ExtendedNoteJSON[];
+    cellWidth: number;
+    cellHeight: number;
+    totalColumns: number;
+    handleCellClick: (noteName: string, colIndex: number) => void;
+    handleNoteClick: (index: number, e: React.MouseEvent) => void;
+    isDraggable: boolean;
+    selectedNotes: ExtendedNoteJSON[];
+    resizeWidth: number;
+    commitResize: () => void;
+    handleResize: (note: ExtendedNoteJSON, resizeWidth: number) => void;
+    dragContainer: React.RefObject<HTMLDivElement>;
+    width: number;
+    height: number;
+    totalWidth: number;
+}) {
+    return (
+        <div
+            className="relative border border-zinc-700 overflow-auto"
+            style={{ width, height }}
+            ref={dragContainer}
+        >
+            {/* Grid */}
+            <div className="absolute" style={{ width: totalWidth }}>
+                {ALL_NOTES.map((noteName) => (
+                    <PianoRollRow
+                        key={noteName}
+                        noteName={noteName}
+                        cellHeight={cellHeight}
+                        cellWidth={cellWidth}
+                        totalColumns={totalColumns}
+                        onCellClick={handleCellClick}
+                    />
+                ))}
+            </div>
+
+            {/* Notes */}
+            {notes.map((note, index) => {
+                return (
+                    <Note
+                        key={`note-${index}-${note.name}-${note.ticks}-${note.durationTicks}`}
+                        note={note}
+                        cellWidth={cellWidth}
+                        cellHeight={cellHeight}
+                        resizeWidth={resizeWidth}
+                        index={index}
+                        onClick={(e) => handleNoteClick(index, e)}
+                        color={note.committed ? "emerald" : "orange"}
+                        draggable={isDraggable}
+                        isSelected={selectedNotes.includes(note)}
+                        handleResize={(resizeWidth) =>
+                            handleResize(note, resizeWidth)
+                        }
+                        commitResize={commitResize}
+                    />
+                );
+            })}
+        </div>
     );
 }
