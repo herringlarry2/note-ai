@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
 import { ticksFromWidth } from "./PianoRoll";
 
-export default function useDragResize(
+export default function useResizeHandlers(
     selectedNotes: ExtendedNoteJSON[],
     setSelectedNotes: (notes: ExtendedNoteJSON[]) => void,
     cellWidth: number,

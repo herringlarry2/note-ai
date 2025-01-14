@@ -4,11 +4,8 @@ import DragSelect, { DSInputElement } from "dragselect";
 type ProviderProps = {
     children: React.ReactNode;
     settings?: ConstructorParameters<typeof DragSelect<DSInputElement>>[0];
-    onDragEnd: (data: {
-        items: DSInputElement[];
-        event?: MouseEvent | TouchEvent | null | undefined | KeyboardEvent;
-    }) => void;
-    onDragSelect: (items: DSInputElement[]) => void;
+    handleDragEnd: (items: DSInputElement[]) => void;
+    handleDragSelect: (items: DSInputElement[]) => void;
 };
 
 const Context = createContext<DragSelect<DSInputElement> | undefined>(
@@ -36,8 +33,8 @@ function useSubscribe({
 function DragSelectProvider({
     children,
     settings = {},
-    onDragEnd,
-    onDragSelect,
+    handleDragEnd,
+    handleDragSelect,
 }: ProviderProps) {
     const [ds, setDS] = useState<DragSelect<DSInputElement>>();
 
@@ -63,14 +60,13 @@ function DragSelectProvider({
     useSubscribe({
         event: "DS:end",
         callback: ({ items, event, isDragging }) => {
-            console.log("DS:end", items, event, isDragging);
             if (isDragging) {
                 // we've just dragged a selection
                 ds?.clearSelection();
-                onDragEnd({ items, event });
+                handleDragEnd(items);
             } else {
                 // we've made a selection
-                onDragSelect(items);
+                handleDragSelect(items);
             }
         },
         ds,
