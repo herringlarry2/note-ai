@@ -1,10 +1,10 @@
+import React from "react";
 import { NoteJSON } from "../types/Midi";
 import { ALL_NOTES, TICKS_PER_16TH } from "./constants";
 import { useDragSelect } from "./DragSelectProvider";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Resizable } from "react-resizable";
-
-import { widthFromDurationTicks } from "./PianoRoll";
+import { widthFromDurationTicks } from "./utils";
 
 const colorVariants = {
     emerald:
@@ -80,6 +80,7 @@ export default function Note({
             width={width}
             axis="x"
             height={cellHeight - 2}
+            // TODO(will): Proper types!
             onResize={(e: any, { size }: any) => {
                 e.preventDefault();
                 // Prevent the drag select from being triggered

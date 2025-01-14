@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
-import { ticksFromWidth } from "./PianoRoll";
+import { ticksFromWidth } from "./utils";
 
 export default function useResizeHandlers(
     selectedNotes: ExtendedNoteJSON[],
@@ -34,7 +34,7 @@ export default function useResizeHandlers(
     }
 
     function handleResize(note: ExtendedNoteJSON, resizeWidth: number) {
-        // if selected th
+        // If not already selected, then reset the selection to the specified note and resize it
         if (!selectedNotes.includes(note)) {
             setSelectedNotes([note]);
             setResizeWidth(resizeWidth);
