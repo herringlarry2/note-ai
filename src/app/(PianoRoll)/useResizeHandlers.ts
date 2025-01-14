@@ -6,8 +6,10 @@ export default function useResizeHandlers(
     selectedNotes: ExtendedNoteJSON[],
     setSelectedNotes: (notes: ExtendedNoteJSON[]) => void,
     cellWidth: number,
-    removeNotes: (notes: ExtendedNoteJSON[]) => void,
-    addNotes: (notes: ExtendedNoteJSON[]) => void
+    updateNotes: (
+        oldNotes: ExtendedNoteJSON[],
+        newNotes: ExtendedNoteJSON[]
+    ) => void
 ): {
     resizeWidth: number;
     commitResize: () => void;
@@ -16,9 +18,6 @@ export default function useResizeHandlers(
     const [resizeWidth, setResizeWidth] = useState(0);
 
     function commitResize() {
-        // Remove the old selected notes
-        removeNotes(selectedNotes);
-
         // Create new, resized notes
         const newNotes = selectedNotes.map((note) => {
             return {
@@ -27,8 +26,7 @@ export default function useResizeHandlers(
                     note.durationTicks + ticksFromWidth(resizeWidth, cellWidth),
             };
         });
-        // Add the new notes
-        addNotes(newNotes);
+        updateNotes(selectedNotes, newNotes);
         // Set the selected notes to the new notes
         setSelectedNotes(newNotes);
         // Reset the resize width

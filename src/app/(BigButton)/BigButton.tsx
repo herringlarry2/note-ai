@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import noteClient from "../../../api/noteClient";
 import { type NoteJSON } from "../types/Midi";
 import { useAudio } from "../utils/audio";
 import ContinuedSequence from "./ContinuedSequence";
 import { PianoRoll } from "../(PianoRoll)/PianoRoll";
-import {  useEditMode } from "./useEditMode";
+import { useEditMode } from "./useEditMode";
 
 import useManageNotes from "./useManageNotes";
 import EditModeButtons from "./EditModeButtons";
-
 
 function Spinner() {
     return (
@@ -18,14 +17,14 @@ function Spinner() {
     );
 }
 
-
 function BigButton() {
     const [selectedIdx, setSelectedIdx] = useState(-1);
     const [isGenerating, setIsGenerating] = useState(false);
     const [ideas, setIdeas] = useState<NoteJSON[][]>([]);
     const { playNotes } = useAudio();
     const { mode, setMode } = useEditMode();
-    const { notes, addNotes, removeNotes, commitNotes, clearNotes } = useManageNotes();
+    const { notes, addNotes, removeNotes, commitNotes, clearNotes } =
+        useManageNotes();
 
     function onClear() {
         clearNotes();
@@ -65,10 +64,17 @@ function BigButton() {
                 ideas={ideas}
                 onSelect={(idx) => {
                     // Remove current idea
-                    const uncommittedNotes = notes.filter((note) => !note.committed);
+                    const uncommittedNotes = notes.filter(
+                        (note) => !note.committed
+                    );
                     removeNotes(uncommittedNotes);
                     // Add new idea
-                    addNotes(ideas[idx].map((note) => ({ ...note, committed: false })));
+                    addNotes(
+                        ideas[idx].map((note) => ({
+                            ...note,
+                            committed: false,
+                        }))
+                    );
                     setSelectedIdx(idx);
                 }}
                 selectedIdx={selectedIdx}

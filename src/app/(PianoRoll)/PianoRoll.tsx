@@ -44,13 +44,20 @@ export function PianoRoll({
     const { cellHeight, cellWidth, totalColumns, totalWidth } =
         getGridDimensions(notes, width, height);
 
+    function updateNotes(
+        oldNotes: ExtendedNoteJSON[],
+        newNotes: ExtendedNoteJSON[]
+    ) {
+        removeNotes(oldNotes);
+        addNotes(newNotes);
+    }
+
     // When you drag the end of a note to resize it
     const { commitResize, handleResize, resizeWidth } = useResizeHandlers(
         selectedNotes,
         setSelectedNotes,
         cellWidth,
-        removeNotes,
-        addNotes
+        updateNotes
     );
 
     // When you click an empty cell or a note, only used in "write" mode
@@ -68,8 +75,7 @@ export function PianoRoll({
         notes,
         cellHeight,
         QUANTIZED,
-        addNotes,
-        removeNotes,
+        updateNotes,
         setSelectedNotes
     );
 
