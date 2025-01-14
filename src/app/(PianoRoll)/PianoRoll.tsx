@@ -10,7 +10,10 @@ import PianoRollRow from "./PianoRow";
 import getGridDimensions from "./getGridDimensions";
 import { DragSelectProvider } from "./DragSelectProvider";
 import { DSInputElement } from "dragselect";
-import useDragResize from "./useDragResize";
+import useResizeHandlers from "./useResizeHandlers";
+import { useNoteHandlers } from "./useNoteHandlers";
+import useDragHandlers from "./useDragHandlers";
+import PianoGrid from "./PianoGrid";
 
 export function widthFromDurationTicks(ticks: number, cellWidth: number) {
     return (ticks / TICKS_PER_16TH) * cellWidth;
@@ -22,29 +25,6 @@ export function ticksFromWidth(width: number, cellWidth: number) {
 
 // TODO(will): This should be a user setting. Also maybe can add more fine-grained control over quantization.
 const QUANTIZED = true;
-
-function getNoteFromId(id: string, notes: ExtendedNoteJSON[]) {
-    const [_, _1, noteName, ticks, durationTicks] = id.split("-");
-    return notes.find(
-        (n) =>
-            n.name === noteName &&
-            n.ticks === parseInt(ticks) &&
-            n.durationTicks === parseInt(durationTicks)
-    );
-}
-
-function createNote(noteName: string, ticks: number) {
-    return {
-        name: noteName,
-        velocity: 1,
-        ticks: ticks,
-        durationTicks: TICKS_PER_16TH,
-        time: 0,
-        midi: 0,
-        duration: 0,
-        committed: true,
-    };
-}
 
 export function PianoRoll({
     notes,
@@ -68,7 +48,8 @@ export function PianoRoll({
     const { cellHeight, cellWidth, totalColumns, totalWidth } =
         getGridDimensions(notes, width, height);
 
-    const { commitResize, handleResize, resizeWidth } = useDragResize(
+    // When you drag the end of a note to resize it
+    const { commitResize, handleResize, resizeWidth } = useResizeHandlers(
         selectedNotes,
         setSelectedNotes,
         cellWidth,
@@ -76,130 +57,57 @@ export function PianoRoll({
         addNotes
     );
 
-    // Extract handlers into separate functions for clarity
-    const handleCellClick = useCallback(
-        (noteName: string, columnIndex: number) => {
-            if (mode !== "write") return;
-
-            const ticks = columnIndex * TICKS_PER_16TH;
-            const newNote: ExtendedNoteJSON = createNote(noteName, ticks);
-            addNotes([newNote]);
-        },
-        [mode, addNotes]
+    // When you click an empty cell or a note, only used in "write" mode
+    const { handleCellClick, handleNoteClick } = useNoteHandlers(
+        mode,
+        addNotes,
+        removeNotes,
+        setSelectedNotes,
+        notes
     );
 
-    const handleNoteClick = (index: number, e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent triggering handleCellClick
-        // If we are in write mode, then we should delete the note
-        if (mode === "write") {
-            removeNotes([notes[index]]);
-        } else {
-            setSelectedNotes([notes[index]]);
-        }
-    };
-
-    const updateNotes = ({
-        items,
-        event,
-    }: {
-        items: DSInputElement[];
-        event?: MouseEvent | TouchEvent | null | undefined | KeyboardEvent;
-    }) => {
-        if (!items.length) return;
-
-        const noteIds = items.map((item) => item.id);
-        const notesFromIds = noteIds.map((id) => {
-            return getNoteFromId(id, notes);
-        });
-
-        const transform = items[0].style.transform;
-        // No transform means we are not dragging
-        if (!transform) return;
-
-        // Get the transform values
-        const transformX = transform.split("(")[1].split(",")[0];
-        const transformY = transform.split("(")[1].split(",")[1];
-
-        // Remove the old selected notes
-        removeNotes(notesFromIds.filter((n) => n !== undefined));
-
-        // Create new, relocated notes
-        const notesToAdd = notesFromIds
-            .filter((n) => n !== undefined)
-            .map((n) =>
-                deriveNewNote(
-                    parseInt(transformX),
-                    parseInt(transformY),
-                    cellHeight,
-                    n,
-                    QUANTIZED
-                )
-            )
-            .filter((n) => n !== null);
-
-        // Add the new notes
-        addNotes(notesToAdd);
-        // Set the selected notes to the new notes
-        setSelectedNotes(notesToAdd);
-    };
-
-    const isDraggable = mode === "point";
+    // When you drag a note, only used in "point" mode
+    const { handleDragEnd, handleDragSelect, isDraggable } = useDragHandlers(
+        mode,
+        notes,
+        cellHeight,
+        QUANTIZED,
+        addNotes,
+        removeNotes,
+        setSelectedNotes
+    );
 
     return (
         <DragSelectProvider
             settings={{
                 area: dragContainer.current ?? undefined,
             }}
-            onDragEnd={updateNotes}
-            onDragSelect={(items: DSInputElement[]) => {
-                setSelectedNotes(
-                    items
-                        .map((item) => getNoteFromId(item.id, notes))
-                        .filter((n) => n !== undefined)
-                );
-            }}
+            handleDragEnd={handleDragEnd}
+            handleDragSelect={handleDragSelect}
         >
-            <div
-                className="relative border border-zinc-700 overflow-auto"
-                style={{ width, height }}
-                ref={dragContainer}
-            >
-                {/* Grid */}
-                <div className="absolute" style={{ width: totalWidth }}>
-                    {ALL_NOTES.map((noteName) => (
-                        <PianoRollRow
-                            key={noteName}
-                            noteName={noteName}
-                            cellHeight={cellHeight}
-                            cellWidth={cellWidth}
-                            totalColumns={totalColumns}
-                            onCellClick={handleCellClick}
-                        />
-                    ))}
-                </div>
-
-                {/* Notes */}
-                {notes.map((note, index) => {
-                    return (
-                        <Note
-                            key={`note-${index}-${note.name}`}
-                            note={note}
-                            cellWidth={cellWidth}
-                            cellHeight={cellHeight}
-                            resizeWidth={resizeWidth}
-                            index={index}
-                            onClick={(e) => handleNoteClick(index, e)}
-                            color={note.committed ? "emerald" : "orange"}
-                            draggable={isDraggable}
-                            isSelected={selectedNotes.includes(note)}
-                            handleResize={(resizeWidth) =>
-                                handleResize(note, resizeWidth)
-                            }
-                            commitResize={commitResize}
-                        />
-                    );
-                })}
-            </div>
+            {/* In charge of rendering the grid and notes and hooking up the resize and drag handlers */}
+            <PianoGrid
+                notes={notes}
+                // Dimensions
+                cellWidth={cellWidth}
+                cellHeight={cellHeight}
+                // Container width and height (can scroll to access total width and height)
+                width={width}
+                height={height}
+                // Total width and height with scroll
+                totalWidth={totalWidth}
+                totalColumns={totalColumns}
+                // Handlers
+                handleCellClick={handleCellClick}
+                handleNoteClick={handleNoteClick}
+                commitResize={commitResize}
+                handleResize={handleResize}
+                // Drag + Resize state
+                selectedNotes={selectedNotes}
+                isDraggable={isDraggable}
+                resizeWidth={resizeWidth}
+                dragContainer={dragContainer}
+            />
         </DragSelectProvider>
     );
 }
