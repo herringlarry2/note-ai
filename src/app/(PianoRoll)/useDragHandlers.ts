@@ -18,8 +18,10 @@ export default function useDragHandlers(
     notes: ExtendedNoteJSON[],
     cellHeight: number,
     quantized: boolean,
-    addNotes: (notes: ExtendedNoteJSON[]) => void,
-    removeNotes: (notes: ExtendedNoteJSON[]) => void,
+    updateNotes: (
+        oldNotes: ExtendedNoteJSON[],
+        newNotes: ExtendedNoteJSON[]
+    ) => void,
     setSelectedNotes: (notes: ExtendedNoteJSON[]) => void
 ) {
     const isDraggable = mode === "point";
@@ -40,11 +42,6 @@ export default function useDragHandlers(
         const transformX = transform.split("(")[1].split(",")[0];
         const transformY = transform.split("(")[1].split(",")[1];
 
-        // Remove the old selected notes
-        removeNotes(notesFromIds.filter((n) => n !== undefined));
-
-        console.log(notesFromIds);
-
         // Create new, relocated notes
         const notesToAdd = notesFromIds
             .filter((n) => n !== undefined)
@@ -59,10 +56,10 @@ export default function useDragHandlers(
             )
             .filter((n) => n !== null);
 
-        console.log(notesToAdd);
-
-        // Add the new notes
-        addNotes(notesToAdd);
+        updateNotes(
+            notesFromIds.filter((n) => n !== undefined),
+            notesToAdd
+        );
         // Set the selected notes to the new notes
         setSelectedNotes(notesToAdd);
     }
