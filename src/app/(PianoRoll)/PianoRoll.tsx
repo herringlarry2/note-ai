@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { TICKS_PER_16TH } from "./constants";
 import { EditMode } from "../(BigButton)/useEditMode";
 import { ExtendedNoteJSON } from "../(BigButton)/useManageNotes";
 import getGridDimensions from "./getGridDimensions";
@@ -10,14 +9,6 @@ import useResizeHandlers from "./useResizeHandlers";
 import { useNoteHandlers } from "./useNoteHandlers";
 import useDragHandlers from "./useDragHandlers";
 import PianoGrid from "./PianoGrid";
-
-export function widthFromDurationTicks(ticks: number, cellWidth: number) {
-    return (ticks / TICKS_PER_16TH) * cellWidth;
-}
-
-export function ticksFromWidth(width: number, cellWidth: number) {
-    return (width / cellWidth) * TICKS_PER_16TH;
-}
 
 // TODO(will): This should be a user setting. Also maybe can add more fine-grained control over quantization.
 const QUANTIZED = true;
