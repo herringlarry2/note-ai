@@ -1,9 +1,10 @@
-# Piano Roll Editor
+#Note AI
 
-A modern web-based piano roll editor for creating and editing musical sequences.
+A modern web-based MIDI piano roll editor with autocomplete functionality. Simply click 'Generate,' and it will provide suggestions for your next step in the composition process.
 
 ## Features
 
+- AI Midi Autocompletion
 - Interactive piano roll interface
 - Note creation, deletion, and editing
 - Drag and resize notes
